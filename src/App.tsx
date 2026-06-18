@@ -56,14 +56,23 @@ function AppRoutes() {
   );
 }
 
+function AppCore() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
 export default function App() {
+  if (!GOOGLE_CLIENT_ID) {
+    return <AppCore />;
+  }
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
+      <AppCore />
     </GoogleOAuthProvider>
   );
 }
