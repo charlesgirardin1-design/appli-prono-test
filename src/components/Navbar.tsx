@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Calendar, Users, BarChart3, Menu, X, Star } from 'lucide-react';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
@@ -11,6 +11,7 @@ export default function Navbar() {
     { to: '/favoris', label: 'Favoris', icon: Star },
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
+    { to: '/parametres', label: 'Paramètres', icon: Settings },
   ];
 
   return (

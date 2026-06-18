@@ -5,6 +5,7 @@ import { recordPronoToday } from '../hooks/useStreak';
 import { fireConfetti } from '../hooks/useConfetti';
 import Countdown from './Countdown';
 import { CheckCircle, Zap, Star } from 'lucide-react';
+import { FlagImg } from '../lib/flags';
 
 interface Props {
   match: Match;
@@ -113,6 +114,7 @@ export default function MatchCard({ match }: Props) {
 
           <div className="match-teams">
             <div className="team">
+              <FlagImg name={match.homeTeam.name} size={28} />
               <span className="team-name">{match.homeTeam.name}</span>
             </div>
             <div className="match-score">
@@ -124,6 +126,7 @@ export default function MatchCard({ match }: Props) {
             </div>
             <div className="team away">
               <span className="team-name">{match.awayTeam.name}</span>
+              <FlagImg name={match.awayTeam.name} size={28} />
             </div>
           </div>
 

@@ -1,17 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { saveFavoris, getFavoris } from '../lib/firestore';
 import { Star, Trophy, Crosshair, CheckCircle } from 'lucide-react';
+import { FlagImg } from '../lib/flags';
 
-const TEAMS = [
-  'France', 'Brésil', 'Argentine', 'Angleterre', 'Espagne', 'Allemagne',
-  'Portugal', 'Pays-Bas', 'Belgique', 'Italie', 'Uruguay', 'Maroc',
-  'Sénégal', 'États-Unis', 'Mexique', 'Japon', 'Australie', 'Croatie',
-];
+// All 48 WC2026 countries (from seed data)
+const ALL_TEAMS = [
+  'Mexique', 'Équateur', 'Canada', 'Suisse', 'Brésil', 'Maroc',
+  'États-Unis', 'Paraguay', 'Australie', 'Türkiye', 'Allemagne', 'Curaçao',
+  "Côte d'Ivoire", 'Pays-Bas', 'Japon', 'Suède', 'Tunisie', 'Belgique',
+  'Égypte', 'Iran', 'Nouvelle-Zélande', 'Espagne', 'Cabo Verde',
+  'Arabie Saoudite', 'Uruguay', 'France', 'Sénégal', 'Norvège', 'Irak',
+  'Argentine', 'Algérie', 'Autriche', 'Jordanie', 'Portugal', 'Congo DR',
+  'Ouzbékistan', 'Colombie', 'Angleterre', 'Croatie', 'Ghana', 'Panama',
+  'Afrique du Sud', 'Corée du Sud', 'Tchéquie', 'Qatar', 'Haïti', 'Écosse',
+  'Bosnie-Herzégovine',
+].sort();
 
-const TOP_SCORERS = [
-  'Kylian Mbappé', 'Erling Haaland', 'Vinicius Jr.', 'Lionel Messi',
-  'Cristiano Ronaldo', 'Harry Kane', 'Pedri', 'Phil Foden',
-  'Jude Bellingham', 'Lamine Yamal', 'Rodri', 'Bukayo Saka',
+const TOP_SCORERS: { name: string; team: string }[] = [
+  { name: 'Kylian Mbappé', team: 'France' },
+  { name: 'Vinicius Jr.', team: 'Brésil' },
+  { name: 'Lionel Messi', team: 'Argentine' },
+  { name: 'Erling Haaland', team: 'Norvège' },
+  { name: 'Harry Kane', team: 'Angleterre' },
+  { name: 'Cristiano Ronaldo', team: 'Portugal' },
+  { name: 'Lamine Yamal', team: 'Espagne' },
+  { name: 'Jude Bellingham', team: 'Angleterre' },
+  { name: 'Rodri', team: 'Espagne' },
+  { name: 'Phil Foden', team: 'Angleterre' },
+  { name: 'Bukayo Saka', team: 'Angleterre' },
+  { name: 'Pedri', team: 'Espagne' },
+  { name: 'Federico Valverde', team: 'Uruguay' },
+  { name: 'Vinícius Jr.', team: 'Brésil' },
+  { name: 'Raphinha', team: 'Brésil' },
+  { name: 'Neymar Jr.', team: 'Brésil' },
+  { name: 'Nicolás González', team: 'Argentine' },
+  { name: 'Julián Álvarez', team: 'Argentine' },
+  { name: 'Karim Benzema', team: 'France' },
+  { name: 'Antoine Griezmann', team: 'France' },
+  { name: 'Ousmane Dembélé', team: 'France' },
+  { name: 'Sadio Mané', team: 'Sénégal' },
+  { name: 'Mohamed Salah', team: 'Égypte' },
+  { name: 'Richarlison', team: 'Brésil' },
+  { name: 'Hirving Lozano', team: 'Mexique' },
+  { name: 'Giovanni Reyna', team: 'États-Unis' },
+  { name: 'Christian Pulisic', team: 'États-Unis' },
+  { name: 'Alphonso Davies', team: 'Canada' },
+  { name: 'Son Heung-min', team: 'Corée du Sud' },
+  { name: 'Hakim Ziyech', team: 'Maroc' },
+  { name: 'Sofiane Boufal', team: 'Maroc' },
+  { name: 'Darwin Núñez', team: 'Uruguay' },
+  { name: 'Khvicha Kvaratskhelia', team: 'Géorgie' },
+  { name: 'Leroy Sané', team: 'Allemagne' },
+  { name: 'Florian Wirtz', team: 'Allemagne' },
+  { name: 'Kai Havertz', team: 'Allemagne' },
+  { name: 'Xavi Simons', team: 'Pays-Bas' },
+  { name: 'Donyell Malen', team: 'Pays-Bas' },
+  { name: 'Memphis Depay', team: 'Pays-Bas' },
+  { name: 'Diogo Jota', team: 'Portugal' },
+  { name: 'Rafael Leão', team: 'Portugal' },
+  { name: 'Bruno Fernandes', team: 'Portugal' },
+  { name: 'Dušan Vlahović', team: 'Serbie' },
+  { name: 'Hakan Çalhanoğlu', team: 'Türkiye' },
+  { name: 'Arda Güler', team: 'Türkiye' },
+  { name: 'Nicolás Jackson', team: 'Sénégal' },
+  { name: 'Takumi Minamino', team: 'Japon' },
+  { name: 'Kaoru Mitoma', team: 'Japon' },
 ];
 
 export default function Favoris() {
@@ -73,10 +126,11 @@ export default function Favoris() {
       <form onSubmit={handleSubmit} className="favoris-form card">
         <div className="favoris-field">
           <label><Trophy size={16} /> Équipe vainqueur</label>
+          {winner && <div className="flag-preview"><FlagImg name={winner} size={32} /> <span>{winner}</span></div>}
           <select value={winner} onChange={e => setWinner(e.target.value)}
             className="select full" disabled={locked} required>
             <option value="">Choisir une équipe...</option>
-            {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+            {ALL_TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div className="favoris-field">
@@ -84,7 +138,9 @@ export default function Favoris() {
           <select value={topScorer} onChange={e => setTopScorer(e.target.value)}
             className="select full" disabled={locked} required>
             <option value="">Choisir un joueur...</option>
-            {TOP_SCORERS.map(p => <option key={p} value={p}>{p}</option>)}
+            {TOP_SCORERS.map(p => (
+              <option key={p.name} value={p.name}>{p.name} ({p.team})</option>
+            ))}
           </select>
         </div>
         {!locked && (
@@ -97,7 +153,7 @@ export default function Favoris() {
       {locked && winner && topScorer && (
         <div className="favoris-recap card">
           <h3>Vos pronostics</h3>
-          <div className="recap-row"><Trophy size={18} /><span>Vainqueur : <strong>{winner}</strong></span></div>
+          <div className="recap-row"><Trophy size={18} /><FlagImg name={winner} size={22} /><span>Vainqueur : <strong>{winner}</strong></span></div>
           <div className="recap-row"><Crosshair size={18} /><span>Meilleur buteur : <strong>{topScorer}</strong></span></div>
         </div>
       )}
