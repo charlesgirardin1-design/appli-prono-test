@@ -141,19 +141,27 @@ export default function MatchCard({ match }: Props) {
             const total = inv(home) + inv(draw) + inv(away);
             const pct = (v: number) => Math.round((inv(v) / total) * 100);
             return (
-            <div className="odds-row">
-              {[
-                { label: match.homeTeam.name.split(' ')[0], val: home, prob: pct(home) },
-                { label: 'Nul', val: draw, prob: pct(draw) },
-                { label: match.awayTeam.name.split(' ')[0], val: away, prob: pct(away) },
-              ].map(({ label, val, prob }) => (
-                <div key={label} className="odd-item">
-                  <span className="odd-label">{label}</span>
-                  <span className="odd-prob">{prob}%</span>
-                  <span className="odd-value">{val.toFixed(2)}</span>
-                  <span className="odd-pts">{Math.round(val * 10)} pts</span>
-                </div>
-              ))}
+            <div className="odds-section">
+              <div className="odds-header">
+                <span className="odds-title">Cotes</span>
+                <span className="odds-hint" title="La cote indique la difficulté du pronostic. Plus elle est élevée, plus les points rapportés sont importants. Ex : cote 3.10 = 31 pts si bonne tendance.">
+                  ℹ️ Cote × 10 = pts
+                </span>
+              </div>
+              <div className="odds-row">
+                {[
+                  { label: match.homeTeam.name.split(' ')[0], val: home, prob: pct(home) },
+                  { label: 'Nul', val: draw, prob: pct(draw) },
+                  { label: match.awayTeam.name.split(' ')[0], val: away, prob: pct(away) },
+                ].map(({ label, val, prob }) => (
+                  <div key={label} className="odd-item">
+                    <span className="odd-label">{label}</span>
+                    <span className="odd-prob">{prob}%</span>
+                    <span className="odd-value">{val.toFixed(2)}</span>
+                    <span className="odd-pts">{Math.round(val * 10)} pts</span>
+                  </div>
+                ))}
+              </div>
             </div>
             );
           })()}

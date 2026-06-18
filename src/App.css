@@ -1333,3 +1333,79 @@ body {
   transition: all 0.15s;
 }
 .btn-leave:hover { border-color: var(--red); color: var(--red); }
+
+/* ===== OAUTH BUTTONS ===== */
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.btn-oauth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+
+.btn-google {
+  background: var(--bg3);
+  color: var(--text);
+}
+.btn-google:hover { background: var(--border); }
+
+.btn-apple {
+  background: var(--bg3);
+  color: var(--text2);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  color: var(--text2);
+  font-size: 0.8rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ===== FLAG EMOJI ===== */
+.flag-emoji {
+  display: inline-block;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ===== ODDS SECTION ===== */
+.odds-section { margin-top: 0.5rem; }
+.odds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.odds-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); }
+.odds-hint {
+  font-size: 0.72rem;
+  color: var(--text2);
+  cursor: help;
+  padding: 2px 6px;
+  background: var(--bg3);
+  border-radius: 4px;
+}

@@ -1,7 +1,5 @@
-
 import React from 'react';
 
-// Mapping nom pays → code ISO 3166-1 alpha-2 pour flagcdn.com
 export const FLAG_CODES: Record<string, string> = {
   'Mexique': 'mx', 'Afrique du Sud': 'za', 'Corée du Sud': 'kr', 'Tchéquie': 'cz',
   'Canada': 'ca', 'Bosnie-Herzégovine': 'ba', 'Suisse': 'ch', 'Qatar': 'qa',
@@ -15,8 +13,25 @@ export const FLAG_CODES: Record<string, string> = {
   'Argentine': 'ar', 'Algérie': 'dz', 'Autriche': 'at', 'Jordanie': 'jo',
   'Portugal': 'pt', 'Congo DR': 'cd', 'Ouzbékistan': 'uz', 'Colombie': 'co',
   'Angleterre': 'gb-eng', 'Croatie': 'hr', 'Ghana': 'gh', 'Panama': 'pa',
-  // clubs (si besoin futur)
 };
+
+// Special emoji flags that can't be derived from 2-letter code
+const SPECIAL_EMOJI: Record<string, string> = {
+  'gb-eng': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'gb-sct': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+};
+
+export function getEmojiFlag(countryName: string): string {
+  const code = FLAG_CODES[countryName];
+  if (!code) return '';
+  if (SPECIAL_EMOJI[code]) return SPECIAL_EMOJI[code];
+  // Build emoji from ISO 3166-1 alpha-2 (regional indicator letters)
+  const offset = 127397;
+  return code.toUpperCase().substring(0, 2)
+    .split('')
+    .map(c => String.fromCodePoint(c.charCodeAt(0) + offset))
+    .join('');
+}
 
 export function getFlagUrl(countryName: string, size: number = 32): string {
   const code = FLAG_CODES[countryName];
@@ -27,17 +42,16 @@ export function getFlagUrl(countryName: string, size: number = 32): string {
 export function FlagImg({
   name, size = 24, className = '',
 }: { name: string; size?: number; className?: string }) {
-  const url = getFlagUrl(name, size * 2); // 2x for retina
-  if (!url) return null;
+  const emoji = getEmojiFlag(name);
+  if (!emoji) return null;
   return (
-    <img
-      src={url}
-      alt={name}
-      width={size}
-      height={Math.round(size * 0.67)}
-      className={`flag-img ${className}`}
-      style={{ borderRadius: 2, objectFit: 'cover' }}
-      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-    />
+    <span
+      className={`flag-emoji ${className}`}
+      style={{ fontSize: size, lineHeight: 1 }}
+      role="img"
+      aria-label={name}
+    >
+      {emoji}
+    </span>
   );
 }
