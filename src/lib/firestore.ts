@@ -1,54 +1,42 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  arrayUnion,
-} from 'firebase/firestore';
-import { db } from './firebase';
+// Couche données — localStorage (remplace Firestore)
+import { db } from './storage';
+import { getAllUsers } from './auth';
 import { Match, Prono, Group, LeaderboardEntry, Favoris } from '../types';
 
 // ---- MATCHES ----
-export async function getMatches(): Promise<Match[]> {
-  const snap = await getDocs(query(collection(db, 'matches'), orderBy('date', 'asc')));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Match));
+export function getMatches(): Promise<Match[]> {
+  const matches = db.get<Match>('pf_matches');
+  return Promise.resolve(matches.sort((a, b) => a.date.localeCompare(b.date)));
 }
 
-export async function addMatch(match: Omit<Match, 'id'>): Promise<string> {
-  const ref = await addDoc(collection(db, 'matches'), match);
-  return ref.id;
+export function addMatch(match: Omit<Match, 'id'>): Promise<string> {
+  const id = db.newId();
+  db.upsert('pf_matches', { ...match, id });
+  return Promise.resolve(id);
 }
 
-export async function updateMatchScore(matchId: string, homeScore: number, awayScore: number) {
-  await updateDoc(doc(db, 'matches', matchId), { homeScore, awayScore, status: 'finished' });
-  await computePoints(matchId, homeScore, awayScore);
+export function updateMatchScore(matchId: string, homeScore: number, awayScore: number): Promise<void> {
+  const match = db.getOne<Match>('pf_matches', matchId);
+  if (!match) return Promise.resolve();
+  db.upsert('pf_matches', { ...match, homeScore, awayScore, status: 'finished' as const });
+  computePoints(matchId, homeScore, awayScore, match.odds);
+  return Promise.resolve();
 }
 
 // ---- PRONOS ----
-export async function getPronos(userId: string): Promise<Prono[]> {
-  const snap = await getDocs(query(collection(db, 'pronos'), where('userId', '==', userId)));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Prono));
+export function getPronos(userId: string): Promise<Prono[]> {
+  const all = db.get<Prono>('pf_pronos');
+  return Promise.resolve(all.filter(p => p.userId === userId));
 }
 
-export async function getPronoForMatch(userId: string, matchId: string): Promise<Prono | null> {
-  const snap = await getDocs(
-    query(collection(db, 'pronos'), where('userId', '==', userId), where('matchId', '==', matchId))
-  );
-  if (snap.empty) return null;
-  return { id: snap.docs[0].id, ...snap.docs[0].data() } as Prono;
+export function getPronoForMatch(userId: string, matchId: string): Promise<Prono | null> {
+  const all = db.get<Prono>('pf_pronos');
+  return Promise.resolve(all.find(p => p.userId === userId && p.matchId === matchId) || null);
 }
 
-// Vérifie si l'utilisateur a encore son joker X2 disponible
-export async function hasJokerAvailable(userId: string): Promise<boolean> {
-  const snap = await getDocs(
-    query(collection(db, 'pronos'), where('userId', '==', userId), where('joker', '==', true))
-  );
-  return snap.empty;
+export function hasJokerAvailable(userId: string): Promise<boolean> {
+  const all = db.get<Prono>('pf_pronos');
+  return Promise.resolve(!all.some(p => p.userId === userId && p.joker));
 }
 
 export async function saveProno(
@@ -57,29 +45,31 @@ export async function saveProno(
   homeScore: number,
   awayScore: number,
   joker: boolean
-) {
-  // Si joker activé, on retire le joker d'un autre prono si existant
+): Promise<void> {
+  const all = db.get<Prono>('pf_pronos');
+
+  // Si joker activé, retirer l'ancien joker
   if (joker) {
-    const prevJoker = await getDocs(
-      query(collection(db, 'pronos'), where('userId', '==', userId), where('joker', '==', true))
+    const updated = all.map(p =>
+      p.userId === userId && p.joker && p.matchId !== matchId
+        ? { ...p, joker: false }
+        : p
     );
-    for (const d of prevJoker.docs) {
-      if (d.id !== (await getPronoForMatch(userId, matchId))?.id) {
-        await updateDoc(doc(db, 'pronos', d.id), { joker: false });
-      }
-    }
+    db.set('pf_pronos', updated);
   }
 
   const existing = await getPronoForMatch(userId, matchId);
-  const data = { userId, matchId, homeScore, awayScore, joker, createdAt: new Date().toISOString() };
   if (existing) {
-    await updateDoc(doc(db, 'pronos', existing.id), { homeScore, awayScore, joker });
+    db.upsert('pf_pronos', { ...existing, homeScore, awayScore, joker });
   } else {
-    await addDoc(collection(db, 'pronos'), data);
+    db.upsert('pf_pronos', {
+      id: db.newId(),
+      userId, matchId, homeScore, awayScore, joker,
+      createdAt: new Date().toISOString(),
+    });
   }
 }
 
-// Calcule les points basés sur les cotes
 function calcTrendPoints(
   pronoHome: number, pronoAway: number,
   realHome: number, realAway: number,
@@ -88,22 +78,13 @@ function calcTrendPoints(
   const pronoTrend = Math.sign(pronoHome - pronoAway);
   const realTrend = Math.sign(realHome - realAway);
   if (pronoTrend !== realTrend) return 0;
-
-  if (!odds) {
-    // Fallback système simple
-    return pronoTrend === Math.sign(realHome - realAway) ? 1 : 0;
-  }
-
-  // Points = cote de la tendance trouvée * 10 (arrondi)
+  if (!odds) return pronoTrend === realTrend ? 10 : 0;
   if (realTrend > 0) return Math.round(odds.home * 10);
   if (realTrend === 0) return Math.round(odds.draw * 10);
   return Math.round(odds.away * 10);
 }
 
-// Bonus score exact basé sur la rareté (proportion de joueurs ayant trouvé)
 function calcExactBonus(rarityRatio: number): number {
-  // rarityRatio = proportion de joueurs ayant trouvé le score exact (0 à 1)
-  // Moins de joueurs l'ont trouvé → bonus plus élevé (20 à 100 pts)
   if (rarityRatio >= 0.5) return 20;
   if (rarityRatio >= 0.3) return 30;
   if (rarityRatio >= 0.15) return 50;
@@ -111,65 +92,65 @@ function calcExactBonus(rarityRatio: number): number {
   return 100;
 }
 
-async function computePoints(matchId: string, realHome: number, realAway: number) {
-  // Récupérer le match pour les cotes
-  const matchSnap = await getDocs(query(collection(db, 'matches'), where('__name__', '==', matchId)));
-  const matchData = matchSnap.empty ? null : matchSnap.docs[0].data() as Match;
-  const odds = matchData?.odds;
+function computePoints(
+  matchId: string, realHome: number, realAway: number,
+  odds?: Match['odds']
+): void {
+  const all = db.get<Prono>('pf_pronos');
+  const matchPronos = all.filter(p => p.matchId === matchId);
 
-  const snap = await getDocs(query(collection(db, 'pronos'), where('matchId', '==', matchId)));
-  const allPronos = snap.docs.map(d => ({ id: d.id, ...d.data() } as Prono));
+  const exactCount = matchPronos.filter(p => p.homeScore === realHome && p.awayScore === realAway).length;
+  const rarityRatio = matchPronos.length > 0 ? exactCount / matchPronos.length : 0;
 
-  // Calcul rareté score exact
-  const exactCount = allPronos.filter(p => p.homeScore === realHome && p.awayScore === realAway).length;
-  const rarityRatio = allPronos.length > 0 ? exactCount / allPronos.length : 0;
-
-  for (const p of allPronos) {
+  const updated = all.map(p => {
+    if (p.matchId !== matchId) return p;
     const trendPoints = calcTrendPoints(p.homeScore, p.awayScore, realHome, realAway, odds);
     const isExact = p.homeScore === realHome && p.awayScore === realAway;
     const bonusExact = isExact ? calcExactBonus(rarityRatio) : 0;
     const subtotal = trendPoints + bonusExact;
     const totalPoints = p.joker ? subtotal * 2 : subtotal;
+    return { ...p, points: trendPoints, bonusExact, totalPoints };
+  });
 
-    await updateDoc(doc(db, 'pronos', p.id), {
-      points: trendPoints,
-      bonusExact,
-      totalPoints,
-    });
-  }
+  db.set('pf_pronos', updated);
 }
 
 // ---- GROUPS ----
-export async function createGroup(name: string, userId: string): Promise<Group> {
+export function createGroup(name: string, userId: string): Promise<Group> {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const data = { name, code, creatorId: userId, members: [userId], createdAt: new Date().toISOString() };
-  const ref = await addDoc(collection(db, 'groups'), data);
-  return { id: ref.id, ...data };
+  const group: Group = {
+    id: db.newId(),
+    name, code,
+    creatorId: userId,
+    members: [userId],
+    createdAt: new Date().toISOString(),
+  };
+  db.upsert('pf_groups', group);
+  return Promise.resolve(group);
 }
 
-export async function joinGroup(code: string, userId: string): Promise<Group | null> {
-  const snap = await getDocs(query(collection(db, 'groups'), where('code', '==', code)));
-  if (snap.empty) return null;
-  const groupDoc = snap.docs[0];
-  await updateDoc(doc(db, 'groups', groupDoc.id), { members: arrayUnion(userId) });
-  return { id: groupDoc.id, ...groupDoc.data() } as Group;
+export function joinGroup(code: string, userId: string): Promise<Group | null> {
+  const all = db.get<Group>('pf_groups');
+  const group = all.find(g => g.code === code.toUpperCase());
+  if (!group) return Promise.resolve(null);
+  if (!group.members.includes(userId)) {
+    db.upsert('pf_groups', { ...group, members: [...group.members, userId] });
+    return Promise.resolve({ ...group, members: [...group.members, userId] });
+  }
+  return Promise.resolve(group);
 }
 
-export async function getUserGroups(userId: string): Promise<Group[]> {
-  const snap = await getDocs(query(collection(db, 'groups'), where('members', 'array-contains', userId)));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Group));
+export function getUserGroups(userId: string): Promise<Group[]> {
+  const all = db.get<Group>('pf_groups');
+  return Promise.resolve(all.filter(g => g.members.includes(userId)));
 }
 
 // ---- LEADERBOARD ----
-export async function getLeaderboard(memberIds?: string[]): Promise<LeaderboardEntry[]> {
-  const snap = await getDocs(collection(db, 'pronos'));
-  const pronos = snap.docs.map(d => ({ id: d.id, ...d.data() } as Prono));
-
-  const usersSnap = await getDocs(collection(db, 'users'));
+export function getLeaderboard(memberIds?: string[]): Promise<LeaderboardEntry[]> {
+  const pronos = db.get<Prono>('pf_pronos');
+  const users = getAllUsers();
   const usersMap: Record<string, string> = {};
-  usersSnap.docs.forEach(d => {
-    usersMap[d.id] = (d.data() as any).displayName || d.data().email;
-  });
+  users.forEach(u => { usersMap[u.uid] = u.displayName; });
 
   const stats: Record<string, LeaderboardEntry> = {};
   for (const p of pronos) {
@@ -188,24 +169,30 @@ export async function getLeaderboard(memberIds?: string[]): Promise<LeaderboardE
       stats[p.userId].totalPoints += p.totalPoints;
       stats[p.userId].pronos++;
       if (p.bonusExact && p.bonusExact > 0) stats[p.userId].exactScores++;
-      if (p.points && p.points > 0 && !p.bonusExact) stats[p.userId].correctTrends++;
+      else if (p.points && p.points > 0) stats[p.userId].correctTrends++;
     }
   }
-  return Object.values(stats).sort((a, b) => b.totalPoints - a.totalPoints);
-}
-
-// ---- USER PROFILE ----
-export async function saveUserProfile(uid: string, displayName: string, email: string) {
-  await setDoc(doc(db, 'users', uid), { displayName, email }, { merge: true });
+  return Promise.resolve(Object.values(stats).sort((a, b) => b.totalPoints - a.totalPoints));
 }
 
 // ---- FAVORIS ----
-export async function saveFavoris(userId: string, winner: string, topScorer: string) {
-  await setDoc(doc(db, 'favoris', userId), { userId, winner, topScorer });
+export function saveFavoris(userId: string, winner: string, topScorer: string): Promise<void> {
+  const all = db.get<Favoris & { id: string }>('pf_favoris');
+  const existing = all.find(f => f.userId === userId);
+  if (existing) {
+    db.upsert('pf_favoris', { ...existing, winner, topScorer });
+  } else {
+    db.upsert('pf_favoris', { id: userId, userId, winner, topScorer });
+  }
+  return Promise.resolve();
 }
 
-export async function getFavoris(userId: string): Promise<Favoris | null> {
-  const snap = await getDocs(query(collection(db, 'favoris'), where('userId', '==', userId)));
-  if (snap.empty) return null;
-  return snap.docs[0].data() as Favoris;
+export function getFavoris(userId: string): Promise<Favoris | null> {
+  const all = db.get<Favoris & { id: string }>('pf_favoris');
+  return Promise.resolve(all.find(f => f.userId === userId) || null);
+}
+
+// Compatibilité (plus utilisé mais gardé pour éviter erreurs d'import)
+export function saveUserProfile(_uid: string, _displayName: string, _email: string): Promise<void> {
+  return Promise.resolve();
 }

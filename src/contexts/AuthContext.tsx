@@ -1,17 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import { saveUserProfile } from '../lib/firestore';
+import React, { createContext, useContext, useState } from 'react';
+import * as authLib from '../lib/auth';
+import { StoredUser } from '../lib/auth';
 
 interface AuthContextType {
-  currentUser: FirebaseUser | null;
+  currentUser: StoredUser | null;
   loading: boolean;
   signup: (email: string, password: string, displayName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -25,33 +17,26 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => authLib.getCurrentUser());
 
   async function signup(email: string, password: string, displayName: string) {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName });
-    await saveUserProfile(cred.user.uid, displayName, email);
+    const user = authLib.signup(email, password, displayName);
+    setCurrentUser(user);
   }
 
-  function login(email: string, password: string) {
-    return signInWithEmailAndPassword(auth, email, password).then(() => {});
+  async function login(email: string, password: string) {
+    const user = authLib.login(email, password);
+    setCurrentUser(user);
   }
 
-  function logout() {
-    return signOut(auth);
+  async function logout() {
+    authLib.logout();
+    setCurrentUser(null);
   }
-
-  useEffect(() => {
-    return onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
-      setLoading(false);
-    });
-  }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading, signup, login, logout }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ currentUser, loading: false, signup, login, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 }
