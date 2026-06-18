@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createGroup, getUserGroups, joinGroup } from '../lib/firestore';
 import { Group } from '../types';
-import { useAuth } from '../contexts/AuthContext';
 import { Users, Plus, Copy, CheckCircle, LogIn } from 'lucide-react';
 
 export default function Groupes() {
-  const { currentUser } = useAuth();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
@@ -15,33 +13,27 @@ export default function Groupes() {
   const [tab, setTab] = useState<'create' | 'join'>('create');
 
   useEffect(() => {
-    if (!currentUser) return;
-    getUserGroups(currentUser.uid).then(g => {
+    getUserGroups().then(g => {
       setGroups(g);
       setLoading(false);
     });
-  }, [currentUser]);
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser || !newName.trim()) return;
-    const g = await createGroup(newName.trim(), currentUser.uid);
+    if (!newName.trim()) return;
+    const g = await createGroup(newName.trim());
     setGroups(prev => [...prev, g]);
     setNewName('');
   }
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser || !joinCode.trim()) return;
+    if (!joinCode.trim()) return;
     setError('');
-    const g = await joinGroup(joinCode.trim().toUpperCase(), currentUser.uid);
-    if (!g) {
-      setError('Code introuvable');
-      return;
-    }
-    if (!groups.find(x => x.id === g.id)) {
-      setGroups(prev => [...prev, g]);
-    }
+    const g = await joinGroup(joinCode.trim().toUpperCase());
+    if (!g) { setError('Code introuvable'); return; }
+    if (!groups.find(x => x.id === g.id)) setGroups(prev => [...prev, g]);
     setJoinCode('');
   }
 
@@ -69,25 +61,14 @@ export default function Groupes() {
 
         {tab === 'create' ? (
           <form onSubmit={handleCreate} className="form-row">
-            <input
-              type="text"
-              placeholder="Nom du groupe"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              className="input"
-            />
+            <input type="text" placeholder="Nom du groupe" value={newName}
+              onChange={e => setNewName(e.target.value)} className="input" />
             <button type="submit" className="btn-primary">Créer</button>
           </form>
         ) : (
           <form onSubmit={handleJoin} className="form-row">
-            <input
-              type="text"
-              placeholder="Code d'invitation (ex: ABC123)"
-              value={joinCode}
-              onChange={e => setJoinCode(e.target.value)}
-              className="input"
-              maxLength={6}
-            />
+            <input type="text" placeholder="Code (ex: ABC123)" value={joinCode}
+              onChange={e => setJoinCode(e.target.value)} className="input" maxLength={6} />
             <button type="submit" className="btn-primary">Rejoindre</button>
           </form>
         )}
@@ -97,10 +78,7 @@ export default function Groupes() {
       {loading ? (
         <div className="loading">Chargement...</div>
       ) : groups.length === 0 ? (
-        <div className="empty">
-          <Users size={48} opacity={0.3} />
-          <p>Vous n'avez pas encore de groupe</p>
-        </div>
+        <div className="empty"><Users size={48} opacity={0.3} /><p>Aucun groupe pour le moment</p></div>
       ) : (
         <div className="groups-list">
           {groups.map(g => (
@@ -111,7 +89,7 @@ export default function Groupes() {
               </div>
               <div className="group-code">
                 <span>Code : <strong>{g.code}</strong></span>
-                <button onClick={() => copyCode(g.code)} className="btn-icon" title="Copier">
+                <button onClick={() => copyCode(g.code)} className="btn-icon">
                   {copied === g.code ? <CheckCircle size={16} color="green" /> : <Copy size={16} />}
                 </button>
               </div>

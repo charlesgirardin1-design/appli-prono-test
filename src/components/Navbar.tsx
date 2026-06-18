@@ -1,18 +1,10 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Trophy, Calendar, Users, BarChart3, LogOut, Menu, X, Star } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = React.useState(false);
-
-  async function handleLogout() {
-    await logout();
-    navigate('/login');
-  }
 
   const links = [
     { to: '/', label: 'Matchs', icon: Calendar },
@@ -44,14 +36,6 @@ export default function Navbar() {
             {label}
           </Link>
         ))}
-        {currentUser && (
-          <div className="nav-user">
-            <span className="nav-username">{currentUser.displayName}</span>
-            <button onClick={handleLogout} className="btn-logout">
-              <LogOut size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </nav>
   );

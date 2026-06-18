@@ -1,7 +1,8 @@
-// Couche données — localStorage (remplace Firestore)
+// Couche données — localStorage (sans authentification)
 import { db } from './storage';
-import { getAllUsers } from './auth';
 import { Match, Prono, Group, LeaderboardEntry, Favoris } from '../types';
+
+const PLAYER_ID = 'player_solo'; // identifiant unique joueur local
 
 // ---- MATCHES ----
 export function getMatches(): Promise<Match[]> {
@@ -24,23 +25,22 @@ export function updateMatchScore(matchId: string, homeScore: number, awayScore: 
 }
 
 // ---- PRONOS ----
-export function getPronos(userId: string): Promise<Prono[]> {
+export function getPronos(): Promise<Prono[]> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(all.filter(p => p.userId === userId));
+  return Promise.resolve(all.filter(p => p.userId === PLAYER_ID));
 }
 
-export function getPronoForMatch(userId: string, matchId: string): Promise<Prono | null> {
+export function getPronoForMatch(matchId: string): Promise<Prono | null> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(all.find(p => p.userId === userId && p.matchId === matchId) || null);
+  return Promise.resolve(all.find(p => p.userId === PLAYER_ID && p.matchId === matchId) || null);
 }
 
-export function hasJokerAvailable(userId: string): Promise<boolean> {
+export function hasJokerAvailable(): Promise<boolean> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(!all.some(p => p.userId === userId && p.joker));
+  return Promise.resolve(!all.some(p => p.userId === PLAYER_ID && p.joker));
 }
 
 export async function saveProno(
-  userId: string,
   matchId: string,
   homeScore: number,
   awayScore: number,
@@ -48,23 +48,22 @@ export async function saveProno(
 ): Promise<void> {
   const all = db.get<Prono>('pf_pronos');
 
-  // Si joker activé, retirer l'ancien joker
   if (joker) {
     const updated = all.map(p =>
-      p.userId === userId && p.joker && p.matchId !== matchId
+      p.userId === PLAYER_ID && p.joker && p.matchId !== matchId
         ? { ...p, joker: false }
         : p
     );
     db.set('pf_pronos', updated);
   }
 
-  const existing = await getPronoForMatch(userId, matchId);
+  const existing = await getPronoForMatch(matchId);
   if (existing) {
     db.upsert('pf_pronos', { ...existing, homeScore, awayScore, joker });
   } else {
     db.upsert('pf_pronos', {
       id: db.newId(),
-      userId, matchId, homeScore, awayScore, joker,
+      userId: PLAYER_ID, matchId, homeScore, awayScore, joker,
       createdAt: new Date().toISOString(),
     });
   }
@@ -78,7 +77,7 @@ function calcTrendPoints(
   const pronoTrend = Math.sign(pronoHome - pronoAway);
   const realTrend = Math.sign(realHome - realAway);
   if (pronoTrend !== realTrend) return 0;
-  if (!odds) return pronoTrend === realTrend ? 10 : 0;
+  if (!odds) return 10;
   if (realTrend > 0) return Math.round(odds.home * 10);
   if (realTrend === 0) return Math.round(odds.draw * 10);
   return Math.round(odds.away * 10);
@@ -92,13 +91,9 @@ function calcExactBonus(rarityRatio: number): number {
   return 100;
 }
 
-function computePoints(
-  matchId: string, realHome: number, realAway: number,
-  odds?: Match['odds']
-): void {
+function computePoints(matchId: string, realHome: number, realAway: number, odds?: Match['odds']): void {
   const all = db.get<Prono>('pf_pronos');
   const matchPronos = all.filter(p => p.matchId === matchId);
-
   const exactCount = matchPronos.filter(p => p.homeScore === realHome && p.awayScore === realAway).length;
   const rarityRatio = matchPronos.length > 0 ? exactCount / matchPronos.length : 0;
 
@@ -116,53 +111,45 @@ function computePoints(
 }
 
 // ---- GROUPS ----
-export function createGroup(name: string, userId: string): Promise<Group> {
+export function createGroup(name: string): Promise<Group> {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   const group: Group = {
-    id: db.newId(),
-    name, code,
-    creatorId: userId,
-    members: [userId],
+    id: db.newId(), name, code,
+    creatorId: PLAYER_ID,
+    members: [PLAYER_ID],
     createdAt: new Date().toISOString(),
   };
   db.upsert('pf_groups', group);
   return Promise.resolve(group);
 }
 
-export function joinGroup(code: string, userId: string): Promise<Group | null> {
+export function joinGroup(code: string): Promise<Group | null> {
   const all = db.get<Group>('pf_groups');
   const group = all.find(g => g.code === code.toUpperCase());
   if (!group) return Promise.resolve(null);
-  if (!group.members.includes(userId)) {
-    db.upsert('pf_groups', { ...group, members: [...group.members, userId] });
-    return Promise.resolve({ ...group, members: [...group.members, userId] });
+  if (!group.members.includes(PLAYER_ID)) {
+    db.upsert('pf_groups', { ...group, members: [...group.members, PLAYER_ID] });
+    return Promise.resolve({ ...group, members: [...group.members, PLAYER_ID] });
   }
   return Promise.resolve(group);
 }
 
-export function getUserGroups(userId: string): Promise<Group[]> {
+export function getUserGroups(): Promise<Group[]> {
   const all = db.get<Group>('pf_groups');
-  return Promise.resolve(all.filter(g => g.members.includes(userId)));
+  return Promise.resolve(all.filter(g => g.members.includes(PLAYER_ID)));
 }
 
 // ---- LEADERBOARD ----
-export function getLeaderboard(memberIds?: string[]): Promise<LeaderboardEntry[]> {
+export function getLeaderboard(): Promise<LeaderboardEntry[]> {
   const pronos = db.get<Prono>('pf_pronos');
-  const users = getAllUsers();
-  const usersMap: Record<string, string> = {};
-  users.forEach(u => { usersMap[u.uid] = u.displayName; });
-
   const stats: Record<string, LeaderboardEntry> = {};
+
   for (const p of pronos) {
-    if (memberIds && !memberIds.includes(p.userId)) continue;
     if (!stats[p.userId]) {
       stats[p.userId] = {
         userId: p.userId,
-        displayName: usersMap[p.userId] || 'Joueur',
-        totalPoints: 0,
-        exactScores: 0,
-        correctTrends: 0,
-        pronos: 0,
+        displayName: p.userId === PLAYER_ID ? 'Moi' : p.userId,
+        totalPoints: 0, exactScores: 0, correctTrends: 0, pronos: 0,
       };
     }
     if (p.totalPoints !== undefined) {
@@ -176,23 +163,18 @@ export function getLeaderboard(memberIds?: string[]): Promise<LeaderboardEntry[]
 }
 
 // ---- FAVORIS ----
-export function saveFavoris(userId: string, winner: string, topScorer: string): Promise<void> {
+export function saveFavoris(winner: string, topScorer: string): Promise<void> {
   const all = db.get<Favoris & { id: string }>('pf_favoris');
-  const existing = all.find(f => f.userId === userId);
+  const existing = all.find(f => f.userId === PLAYER_ID);
   if (existing) {
     db.upsert('pf_favoris', { ...existing, winner, topScorer });
   } else {
-    db.upsert('pf_favoris', { id: userId, userId, winner, topScorer });
+    db.upsert('pf_favoris', { id: PLAYER_ID, userId: PLAYER_ID, winner, topScorer });
   }
   return Promise.resolve();
 }
 
-export function getFavoris(userId: string): Promise<Favoris | null> {
+export function getFavoris(): Promise<Favoris | null> {
   const all = db.get<Favoris & { id: string }>('pf_favoris');
-  return Promise.resolve(all.find(f => f.userId === userId) || null);
-}
-
-// Compatibilité (plus utilisé mais gardé pour éviter erreurs d'import)
-export function saveUserProfile(_uid: string, _displayName: string, _email: string): Promise<void> {
-  return Promise.resolve();
+  return Promise.resolve(all.find(f => f.userId === PLAYER_ID) || null);
 }

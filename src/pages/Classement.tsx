@@ -1,31 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { getLeaderboard, getUserGroups } from '../lib/firestore';
-import { LeaderboardEntry, Group } from '../types';
-import { useAuth } from '../contexts/AuthContext';
+import { getLeaderboard } from '../lib/firestore';
+import { LeaderboardEntry } from '../types';
 import { BarChart3, Trophy, Target, TrendingUp } from 'lucide-react';
 
 export default function Classement() {
-  const { currentUser } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<string>('global');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentUser) return;
-    getUserGroups(currentUser.uid).then(setGroups);
-  }, [currentUser]);
-
-  useEffect(() => {
     setLoading(true);
-    const members = selectedGroup !== 'global'
-      ? groups.find(g => g.id === selectedGroup)?.members
-      : undefined;
-    getLeaderboard(members).then(l => {
+    getLeaderboard().then(l => {
       setLeaderboard(l);
       setLoading(false);
     });
-  }, [selectedGroup, groups]);
+  }, []);
 
   function getMedal(rank: number) {
     if (rank === 0) return '🥇';
@@ -38,16 +26,6 @@ export default function Classement() {
     <div className="page">
       <div className="page-header">
         <h1><BarChart3 size={24} /> Classement</h1>
-        <select
-          value={selectedGroup}
-          onChange={e => setSelectedGroup(e.target.value)}
-          className="select"
-        >
-          <option value="global">Général</option>
-          {groups.map(g => (
-            <option key={g.id} value={g.id}>{g.name}</option>
-          ))}
-        </select>
       </div>
 
       {loading ? (
@@ -67,10 +45,7 @@ export default function Classement() {
             <span><Trophy size={14} /> Points</span>
           </div>
           {leaderboard.map((entry, i) => (
-            <div
-              key={entry.userId}
-              className={`leaderboard-row ${entry.userId === currentUser?.uid ? 'me' : ''} ${i < 3 ? 'top' : ''}`}
-            >
+            <div key={entry.userId} className={`leaderboard-row ${i < 3 ? 'top' : ''}`}>
               <span className="rank">{getMedal(i)}</span>
               <span className="player-name">{entry.displayName}</span>
               <span>{entry.exactScores}</span>
