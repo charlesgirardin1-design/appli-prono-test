@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { Trophy, User, Mail, Lock, ArrowRight } from 'lucide-react';
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '326011176740-eug901mfntmen1mui8cf9bu1bm070cg7.apps.googleusercontent.com';
 
 function GoogleSignupButton({ onError }: { onError: (msg: string) => void }) {
   const { loginWithOAuth } = useAuth();
