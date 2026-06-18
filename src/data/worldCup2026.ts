@@ -1,8 +1,8 @@
 import { Match } from '../types';
 
-// 72 matchs de la phase de groupes - Coupe du Monde 2026
-// Scores réels pour les matchs joués (MD1 = 11-18 juin)
-// Dates en UTC (EDT = UTC-4)
+// 72 matchs de la phase de groupes — Coupe du Monde 2026
+// Sources : FIFA.com, ESPN, CBS Sports, Yahoo Sports
+// Heures en UTC | EDT = UTC-4 | CDT (Mexique) = UTC-5
 
 export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
@@ -21,22 +21,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     status: 'finished', homeScore: 2, awayScore: 1,
     odds: { home: 2.20, draw: 3.20, away: 3.30 } },
 
-  // MD2
+  // MD2 — Tchéquie est à domicile à Atlanta
+  { homeTeam: { name: 'Tchéquie' }, awayTeam: { name: 'Afrique du Sud' },
+    date: '2026-06-18T16:00:00Z', competition: 'Groupe A',
+    status: 'upcoming',
+    odds: { home: 2.30, draw: 3.20, away: 3.10 } },
+
   { homeTeam: { name: 'Mexique' }, awayTeam: { name: 'Corée du Sud' },
-    date: '2026-06-19T01:00:00Z', competition: 'Groupe A',
+    date: '2026-06-19T03:00:00Z', competition: 'Groupe A',
     status: 'upcoming',
     odds: { home: 1.90, draw: 3.40, away: 4.20 } },
 
-  { homeTeam: { name: 'Afrique du Sud' }, awayTeam: { name: 'Tchéquie' },
-    date: '2026-06-18T16:00:00Z', competition: 'Groupe A',
-    status: 'upcoming',
-    odds: { home: 3.10, draw: 3.20, away: 2.30 } },
-
   // MD3
-  { homeTeam: { name: 'Mexique' }, awayTeam: { name: 'Tchéquie' },
+  { homeTeam: { name: 'Tchéquie' }, awayTeam: { name: 'Mexique' },
     date: '2026-06-25T01:00:00Z', competition: 'Groupe A',
     status: 'upcoming',
-    odds: { home: 1.75, draw: 3.60, away: 4.80 } },
+    odds: { home: 4.80, draw: 3.60, away: 1.75 } },
 
   { homeTeam: { name: 'Afrique du Sud' }, awayTeam: { name: 'Corée du Sud' },
     date: '2026-06-25T01:00:00Z', competition: 'Groupe A',
@@ -61,12 +61,12 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
   // MD2
   { homeTeam: { name: 'Suisse' }, awayTeam: { name: 'Bosnie-Herzégovine' },
     date: '2026-06-18T19:00:00Z', competition: 'Groupe B',
-    status: 'upcoming',
+    status: 'finished', homeScore: 1, awayScore: 1,
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Canada' }, awayTeam: { name: 'Qatar' },
     date: '2026-06-18T22:00:00Z', competition: 'Groupe B',
-    status: 'upcoming',
+    status: 'finished', homeScore: 1, awayScore: 0,
     odds: { home: 1.50, draw: 4.20, away: 7.00 } },
 
   // MD3
@@ -206,16 +206,16 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     status: 'finished', homeScore: 5, awayScore: 1,
     odds: { home: 1.65, draw: 3.70, away: 6.00 } },
 
-  // MD2
+  // MD2 — Tunisie à domicile
   { homeTeam: { name: 'Pays-Bas' }, awayTeam: { name: 'Suède' },
     date: '2026-06-20T17:00:00Z', competition: 'Groupe F',
     status: 'upcoming',
     odds: { home: 1.75, draw: 3.50, away: 4.80 } },
 
-  { homeTeam: { name: 'Japon' }, awayTeam: { name: 'Tunisie' },
-    date: '2026-06-20T04:00:00Z', competition: 'Groupe F',
+  { homeTeam: { name: 'Tunisie' }, awayTeam: { name: 'Japon' },
+    date: '2026-06-21T02:00:00Z', competition: 'Groupe F',
     status: 'upcoming',
-    odds: { home: 1.65, draw: 3.70, away: 5.50 } },
+    odds: { home: 3.20, draw: 3.20, away: 2.20 } },
 
   // MD3
   { homeTeam: { name: 'Japon' }, awayTeam: { name: 'Suède' },
@@ -243,27 +243,27 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     status: 'finished', homeScore: 2, awayScore: 2,
     odds: { home: 2.00, draw: 3.30, away: 4.00 } },
 
-  // MD2
+  // MD2 — Nouvelle-Zélande à domicile
   { homeTeam: { name: 'Belgique' }, awayTeam: { name: 'Iran' },
     date: '2026-06-21T19:00:00Z', competition: 'Groupe G',
     status: 'upcoming',
     odds: { home: 1.60, draw: 3.80, away: 6.00 } },
 
-  { homeTeam: { name: 'Égypte' }, awayTeam: { name: 'Nouvelle-Zélande' },
-    date: '2026-06-22T01:00:00Z', competition: 'Groupe G',
+  { homeTeam: { name: 'Nouvelle-Zélande' }, awayTeam: { name: 'Égypte' },
+    date: '2026-06-22T04:00:00Z', competition: 'Groupe G',
     status: 'upcoming',
-    odds: { home: 1.80, draw: 3.50, away: 4.80 } },
+    odds: { home: 3.00, draw: 3.20, away: 2.40 } },
 
   // MD3
-  { homeTeam: { name: 'Belgique' }, awayTeam: { name: 'Nouvelle-Zélande' },
-    date: '2026-06-26T20:00:00Z', competition: 'Groupe G',
-    status: 'upcoming',
-    odds: { home: 1.30, draw: 5.50, away: 11.00 } },
-
-  { homeTeam: { name: 'Iran' }, awayTeam: { name: 'Égypte' },
-    date: '2026-06-26T20:00:00Z', competition: 'Groupe G',
+  { homeTeam: { name: 'Égypte' }, awayTeam: { name: 'Iran' },
+    date: '2026-06-26T23:00:00Z', competition: 'Groupe G',
     status: 'upcoming',
     odds: { home: 2.20, draw: 3.20, away: 3.30 } },
+
+  { homeTeam: { name: 'Nouvelle-Zélande' }, awayTeam: { name: 'Belgique' },
+    date: '2026-06-26T23:00:00Z', competition: 'Groupe G',
+    status: 'upcoming',
+    odds: { home: 6.00, draw: 4.50, away: 1.55 } },
 
   // ══════════════════════════════════════════
   // GROUPE H — Espagne, Cabo Verde, Arabie Saoudite, Uruguay
@@ -291,16 +291,16 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     status: 'upcoming',
     odds: { home: 1.55, draw: 4.00, away: 7.00 } },
 
-  // MD3
-  { homeTeam: { name: 'Espagne' }, awayTeam: { name: 'Uruguay' },
-    date: '2026-06-26T22:00:00Z', competition: 'Groupe H',
+  // MD3 — Uruguay et Cabo Verde à domicile
+  { homeTeam: { name: 'Uruguay' }, awayTeam: { name: 'Espagne' },
+    date: '2026-06-27T00:00:00Z', competition: 'Groupe H',
     status: 'upcoming',
-    odds: { home: 1.80, draw: 3.50, away: 4.50 } },
+    odds: { home: 3.80, draw: 3.40, away: 2.00 } },
 
-  { homeTeam: { name: 'Arabie Saoudite' }, awayTeam: { name: 'Cabo Verde' },
-    date: '2026-06-26T22:00:00Z', competition: 'Groupe H',
+  { homeTeam: { name: 'Cabo Verde' }, awayTeam: { name: 'Arabie Saoudite' },
+    date: '2026-06-27T00:00:00Z', competition: 'Groupe H',
     status: 'upcoming',
-    odds: { home: 2.00, draw: 3.30, away: 4.00 } },
+    odds: { home: 3.20, draw: 3.30, away: 2.30 } },
 
   // ══════════════════════════════════════════
   // GROUPE I — France, Sénégal, Norvège, Irak
@@ -328,14 +328,14 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     status: 'upcoming',
     odds: { home: 1.90, draw: 3.40, away: 4.30 } },
 
-  // MD3
-  { homeTeam: { name: 'France' }, awayTeam: { name: 'Norvège' },
-    date: '2026-06-27T21:00:00Z', competition: 'Groupe I',
+  // MD3 — Norvège à domicile vs France
+  { homeTeam: { name: 'Norvège' }, awayTeam: { name: 'France' },
+    date: '2026-06-26T19:00:00Z', competition: 'Groupe I',
     status: 'upcoming',
-    odds: { home: 1.80, draw: 3.50, away: 4.50 } },
+    odds: { home: 3.20, draw: 3.30, away: 2.30 } },
 
   { homeTeam: { name: 'Sénégal' }, awayTeam: { name: 'Irak' },
-    date: '2026-06-27T21:00:00Z', competition: 'Groupe I',
+    date: '2026-06-26T19:00:00Z', competition: 'Groupe I',
     status: 'upcoming',
     odds: { home: 1.55, draw: 3.90, away: 6.50 } },
 
@@ -366,15 +366,15 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     odds: { home: 2.50, draw: 3.20, away: 2.90 } },
 
   // MD3
-  { homeTeam: { name: 'Jordanie' }, awayTeam: { name: 'Argentine' },
-    date: '2026-06-28T02:00:00Z', competition: 'Groupe J',
-    status: 'upcoming',
-    odds: { home: 9.00, draw: 5.50, away: 1.35 } },
-
   { homeTeam: { name: 'Algérie' }, awayTeam: { name: 'Autriche' },
     date: '2026-06-28T02:00:00Z', competition: 'Groupe J',
     status: 'upcoming',
     odds: { home: 2.80, draw: 3.20, away: 2.60 } },
+
+  { homeTeam: { name: 'Jordanie' }, awayTeam: { name: 'Argentine' },
+    date: '2026-06-28T02:00:00Z', competition: 'Groupe J',
+    status: 'upcoming',
+    odds: { home: 9.00, draw: 5.50, away: 1.35 } },
 
   // ══════════════════════════════════════════
   // GROUPE K — Portugal, Congo DR, Ouzbékistan, Colombie
