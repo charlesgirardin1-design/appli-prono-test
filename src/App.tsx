@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { seedMatchesIfNeeded } from './lib/seed';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Classement from './pages/Classement';
@@ -8,6 +9,7 @@ import Favoris from './pages/Favoris';
 import './App.css';
 
 export default function App() {
+  useEffect(() => { seedMatchesIfNeeded(); }, []);
   return (
     <BrowserRouter>
       <Navbar />
