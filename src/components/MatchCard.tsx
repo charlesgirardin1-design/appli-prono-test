@@ -104,12 +104,17 @@ export default function MatchCard({ match }: Props) {
         <div className="card-front">
           <div className="match-meta">
             <span className="competition">{match.competition}</span>
-            {!isPast && (
-              <Countdown targetDate={match.date} />
-            )}
-            {isPast && (
-              <span className="status-badge finished">Terminé</span>
-            )}
+            <div className="match-meta-right">
+              {!isPast && (
+                <span className="match-localtime">
+                  {new Date(match.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                  {' '}
+                  {new Date(match.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              {!isPast && <Countdown targetDate={match.date} />}
+              {isPast && <span className="status-badge finished">Terminé</span>}
+            </div>
           </div>
 
           <div className="match-teams">
@@ -130,21 +135,28 @@ export default function MatchCard({ match }: Props) {
             </div>
           </div>
 
-          {match.odds && (
+          {match.odds && (() => {
+            const { home, draw, away } = match.odds;
+            const inv = (v: number) => 1 / v;
+            const total = inv(home) + inv(draw) + inv(away);
+            const pct = (v: number) => Math.round((inv(v) / total) * 100);
+            return (
             <div className="odds-row">
               {[
-                { label: match.homeTeam.name.split(' ')[0], val: match.odds.home },
-                { label: 'Nul', val: match.odds.draw },
-                { label: match.awayTeam.name.split(' ')[0], val: match.odds.away },
-              ].map(({ label, val }) => (
+                { label: match.homeTeam.name.split(' ')[0], val: home, prob: pct(home) },
+                { label: 'Nul', val: draw, prob: pct(draw) },
+                { label: match.awayTeam.name.split(' ')[0], val: away, prob: pct(away) },
+              ].map(({ label, val, prob }) => (
                 <div key={label} className="odd-item">
                   <span className="odd-label">{label}</span>
+                  <span className="odd-prob">{prob}%</span>
                   <span className="odd-value">{val.toFixed(2)}</span>
                   <span className="odd-pts">{Math.round(val * 10)} pts</span>
                 </div>
               ))}
             </div>
-          )}
+            );
+          })()}
 
           {!isPast && (
             <form onSubmit={handleSubmit} className="prono-form">

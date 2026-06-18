@@ -1,10 +1,10 @@
-// Couche données — localStorage (sans authentification)
 import { db } from './storage';
 import { Match, Prono, Group, LeaderboardEntry, Favoris } from '../types';
-import { getPlayerId, getPseudo } from './settings';
+import { getCurrentUser, getUserById } from './auth';
+import { getPseudo } from './settings';
 
-const pid = () => getPlayerId();
-const pseudo = () => getPseudo();
+const pid = () => getCurrentUser()?.uid || 'anonymous';
+const pseudo = () => getCurrentUser()?.displayName || getPseudo();
 
 // ---- MATCHES ----
 export function getMatches(): Promise<Match[]> {
@@ -185,7 +185,7 @@ export function getLeaderboard(): Promise<LeaderboardEntry[]> {
     if (!stats[p.userId]) {
       stats[p.userId] = {
         userId: p.userId,
-        displayName: p.userId === pid() ? pseudo() : p.userId,
+        displayName: p.userId === pid() ? pseudo() : (getUserById(p.userId)?.displayName || p.userId),
         totalPoints: 0, exactScores: 0, correctTrends: 0, pronos: 0,
       };
     }
