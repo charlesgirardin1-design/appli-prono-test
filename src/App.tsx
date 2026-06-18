@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -16,6 +16,27 @@ import Signup from './pages/Signup';
 import './App.css';
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '326011176740-eug901mfntmen1mui8cf9bu1bm070cg7.apps.googleusercontent.com';
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16 }}>
+          <p>Une erreur est survenue.</p>
+          <button onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}>
+            Recharger
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
@@ -76,11 +97,13 @@ function AppCore() {
 
 export default function App() {
   if (!GOOGLE_CLIENT_ID) {
-    return <AppCore />;
+    return <ErrorBoundary><AppCore /></ErrorBoundary>;
   }
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <AppCore />
-    </GoogleOAuthProvider>
+    <ErrorBoundary>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <AppCore />
+      </GoogleOAuthProvider>
+    </ErrorBoundary>
   );
 }
