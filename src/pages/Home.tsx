@@ -13,12 +13,18 @@ export default function Home() {
   const [filter, setFilter] = useState<'upcoming' | 'live' | 'finished' | 'all'>('upcoming');
   const streak = useStreak();
 
-  useEffect(() => {
+  const loadData = () => {
     Promise.all([getMatches(), getPronos()]).then(([m, p]) => {
       setMatches(m);
       setPronos(p);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('pf_matches_updated', loadData);
+    return () => window.removeEventListener('pf_matches_updated', loadData);
   }, []);
 
   const filtered = matches.filter(m => filter === 'all' || getEffectiveStatus(m) === filter);
