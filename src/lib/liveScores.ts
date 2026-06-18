@@ -208,8 +208,10 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
     if (!found) return local;
 
     const newStatus = mapStatus(found.status);
-    const newHomeScore = found.score.fullTime.home ?? undefined;
-    const newAwayScore = found.score.fullTime.away ?? undefined;
+    // For live matches, null score means 0-0
+    const isLiveOrFinished = newStatus === 'live' || newStatus === 'finished';
+    const newHomeScore = found.score.fullTime.home !== null ? (found.score.fullTime.home ?? undefined) : (isLiveOrFinished ? 0 : undefined);
+    const newAwayScore = found.score.fullTime.away !== null ? (found.score.fullTime.away ?? undefined) : (isLiveOrFinished ? 0 : undefined);
 
     // Only update if something changed
     if (
@@ -231,6 +233,7 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
 
   if (updated) {
     db.set('pf_matches', updatedMatches);
+    window.dispatchEvent(new Event('pf_matches_updated'));
   }
 }
 
