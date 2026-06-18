@@ -4,12 +4,13 @@ import { Match, Prono } from '../types';
 import MatchCard from '../components/MatchCard';
 import { Calendar, Flame } from 'lucide-react';
 import { useStreak } from '../hooks/useStreak';
+import { getEffectiveStatus } from '../lib/matchStatus';
 
 export default function Home() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pronos, setPronos] = useState<Prono[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'upcoming' | 'finished' | 'all'>('upcoming');
+  const [filter, setFilter] = useState<'upcoming' | 'live' | 'finished' | 'all'>('upcoming');
   const streak = useStreak();
 
   useEffect(() => {
@@ -20,10 +21,11 @@ export default function Home() {
     });
   }, []);
 
-  const filtered = matches.filter(m => filter === 'all' || m.status === filter);
-  const upcomingCount = matches.filter(m => m.status === 'upcoming').length;
+  const filtered = matches.filter(m => filter === 'all' || getEffectiveStatus(m) === filter);
+  const upcomingCount = matches.filter(m => getEffectiveStatus(m) === 'upcoming').length;
+  const liveCount = matches.filter(m => getEffectiveStatus(m) === 'live').length;
   const pronosCount = pronos.filter(p =>
-    matches.find(m => m.id === p.matchId && m.status === 'upcoming')
+    matches.find(m => m.id === p.matchId && getEffectiveStatus(m) === 'upcoming')
   ).length;
   const progressPct = upcomingCount > 0 ? Math.round((pronosCount / upcomingCount) * 100) : 0;
 
@@ -39,9 +41,9 @@ export default function Home() {
             </div>
           )}
           <div className="filter-tabs">
-            {(['upcoming', 'finished', 'all'] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)} className={`tab ${filter === f ? 'active' : ''}`}>
-                {f === 'upcoming' ? 'À venir' : f === 'finished' ? 'Terminés' : 'Tous'}
+            {(['upcoming', 'live', 'finished', 'all'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)} className={`tab ${filter === f ? 'active' : ''} ${f === 'live' && liveCount > 0 ? 'live-tab' : ''}`}>
+                {f === 'upcoming' ? 'À venir' : f === 'live' ? `En cours${liveCount > 0 ? ` (${liveCount})` : ''}` : f === 'finished' ? 'Terminés' : 'Tous'}
               </button>
             ))}
           </div>

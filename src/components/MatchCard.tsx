@@ -6,6 +6,7 @@ import { fireConfetti } from '../hooks/useConfetti';
 import Countdown from './Countdown';
 import { CheckCircle, Zap, Star } from 'lucide-react';
 import { FlagImg } from '../lib/flags';
+import { getEffectiveStatus } from '../lib/matchStatus';
 
 interface Props {
   match: Match;
@@ -23,7 +24,9 @@ export default function MatchCard({ match }: Props) {
   const [revealed, setRevealed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const isPast = match.status !== 'upcoming';
+  const effectiveStatus = getEffectiveStatus(match);
+  const isLive = effectiveStatus === 'live';
+  const isPast = effectiveStatus !== 'upcoming';
 
   useEffect(() => {
     getPronoForMatch(match.id).then(p => {
@@ -97,7 +100,7 @@ export default function MatchCard({ match }: Props) {
   return (
     <div
       ref={cardRef}
-      className={`match-card ${match.status} ${existing?.joker ? 'has-joker' : ''} ${flipped ? 'is-flipped' : ''}`}
+      className={`match-card ${effectiveStatus} ${existing?.joker ? 'has-joker' : ''} ${flipped ? 'is-flipped' : ''}`}
     >
       <div className="card-inner">
         {/* FACE AVANT */}
@@ -105,15 +108,21 @@ export default function MatchCard({ match }: Props) {
           <div className="match-meta">
             <span className="competition">{match.competition}</span>
             <div className="match-meta-right">
-              {!isPast && (
+              {effectiveStatus === 'upcoming' && (
                 <span className="match-localtime">
                   {new Date(match.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                   {' '}
                   {new Date(match.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
-              {!isPast && <Countdown targetDate={match.date} />}
-              {isPast && <span className="status-badge finished">Terminé</span>}
+              {effectiveStatus === 'upcoming' && <Countdown targetDate={match.date} />}
+              {isLive && (
+                <span className="status-badge live">
+                  <span className="live-dot" />
+                  En cours
+                </span>
+              )}
+              {effectiveStatus === 'finished' && <span className="status-badge finished">Terminé</span>}
             </div>
           </div>
 
@@ -123,7 +132,9 @@ export default function MatchCard({ match }: Props) {
               <span className="team-name">{match.homeTeam.name}</span>
             </div>
             <div className="match-score">
-              {isPast ? (
+              {isLive ? (
+                <span className="live-score">{match.homeScore ?? '?'} - {match.awayScore ?? '?'}</span>
+              ) : effectiveStatus === 'finished' ? (
                 <span className="final-score">{match.homeScore} - {match.awayScore}</span>
               ) : (
                 <span className="vs">VS</span>
@@ -196,7 +207,13 @@ export default function MatchCard({ match }: Props) {
             </div>
           )}
 
-          {isPast && !existing && (
+          {isLive && !existing && (
+            <div className="prono-locked">
+              En cours - Pronos fermés
+            </div>
+          )}
+
+          {effectiveStatus === 'finished' && !existing && (
             <div className="prono-result no-prono">
               <span className="prono-label">Aucun prono soumis</span>
             </div>
