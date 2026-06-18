@@ -10,6 +10,12 @@ export interface Team {
   logo?: string;
 }
 
+export interface Odds {
+  home: number;  // cote victoire domicile
+  draw: number;  // cote match nul
+  away: number;  // cote victoire extérieur
+}
+
 export interface Match {
   id: string;
   homeTeam: Team;
@@ -19,6 +25,7 @@ export interface Match {
   status: 'upcoming' | 'live' | 'finished';
   homeScore?: number;
   awayScore?: number;
+  odds?: Odds;
 }
 
 export interface Prono {
@@ -27,7 +34,10 @@ export interface Prono {
   matchId: string;
   homeScore: number;
   awayScore: number;
-  points?: number;
+  joker: boolean; // bonus X2
+  points?: number;          // points tendance (cote)
+  bonusExact?: number;      // bonus score exact (rareté)
+  totalPoints?: number;     // points + bonusExact, x2 si joker
   createdAt: string;
 }
 
@@ -47,4 +57,10 @@ export interface LeaderboardEntry {
   exactScores: number;
   correctTrends: number;
   pronos: number;
+}
+
+export interface Favoris {
+  userId: string;
+  winner: string;   // équipe gagnante du tournoi
+  topScorer: string; // meilleur buteur
 }
