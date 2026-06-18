@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { seedMatchesIfNeeded } from './lib/seed';
 import { applyTheme, getSettings } from './lib/settings';
+import { startLiveScorePolling } from './lib/liveScores';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Classement from './pages/Classement';
@@ -27,6 +28,13 @@ function AppRoutes() {
   useEffect(() => {
     seedMatchesIfNeeded();
     applyTheme(getSettings().theme);
+
+    const apiKey =
+      process.env.REACT_APP_FOOTBALL_DATA_KEY ||
+      localStorage.getItem('pf_football_api_key') ||
+      'e17c642125d94af9bf0b31676463b862';
+    const stopPolling = startLiveScorePolling(apiKey);
+    return stopPolling;
   }, []);
 
   if (!currentUser) {
