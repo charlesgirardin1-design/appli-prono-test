@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getSettings, saveSettings } from '../lib/settings';
 import { applyTheme } from '../lib/settings';
-import { Settings, User, Moon, Sun, Trash2, CheckCircle, Copy } from 'lucide-react';
+import { fetchAndUpdateScores } from '../lib/liveScores';
+import { Settings, User, Moon, Sun, Trash2, CheckCircle, Copy, Wifi } from 'lucide-react';
 
 export default function ParametresPage() {
   const [pseudo, setPseudo] = useState('');
@@ -9,12 +10,17 @@ export default function ParametresPage() {
   const [playerId, setPlayerId] = useState('');
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [apiKeySaved, setApiKeySaved] = useState(false);
+  const [apiTesting, setApiTesting] = useState(false);
+  const [apiTestResult, setApiTestResult] = useState<'success' | 'error' | null>(null);
 
   useEffect(() => {
     const s = getSettings();
     setPseudo(s.pseudo);
     setTheme(s.theme);
     setPlayerId(s.playerId);
+    setApiKey(localStorage.getItem('pf_football_api_key') || '');
   }, []);
 
   function handleSave(e: React.FormEvent) {
@@ -45,6 +51,27 @@ export default function ParametresPage() {
     localStorage.setItem('pf_pronos', JSON.stringify(filtered));
     localStorage.removeItem('pf_favoris');
     window.location.reload();
+  }
+
+  function saveApiKey() {
+    localStorage.setItem('pf_football_api_key', apiKey.trim());
+    setApiKeySaved(true);
+    setTimeout(() => setApiKeySaved(false), 2000);
+  }
+
+  async function testApiKey() {
+    if (!apiKey.trim()) return;
+    setApiTesting(true);
+    setApiTestResult(null);
+    try {
+      await fetchAndUpdateScores(apiKey.trim());
+      setApiTestResult('success');
+    } catch {
+      setApiTestResult('error');
+    } finally {
+      setApiTesting(false);
+      setTimeout(() => setApiTestResult(null), 4000);
+    }
   }
 
   function resetAll() {
@@ -99,6 +126,38 @@ export default function ParametresPage() {
             <span className="toggle-thumb" />
           </button>
         </div>
+      </div>
+
+      {/* Scores en direct */}
+      <div className="card settings-section">
+        <h2 className="settings-title"><Wifi size={18} /> Scores en direct</h2>
+        <p className="settings-hint">Entrez votre clé API <a href="https://www.football-data.org" target="_blank" rel="noopener noreferrer">football-data.org</a> pour activer la mise à jour automatique des scores (toutes les 60 secondes).</p>
+        <label className="settings-label">Clé API scores en direct</label>
+        <div className="form-row">
+          <input
+            type="password"
+            className="input"
+            value={apiKey}
+            onChange={e => setApiKey(e.target.value)}
+            placeholder="Votre clé football-data.org"
+          />
+          <button type="button" className="btn-primary" onClick={saveApiKey}>
+            {apiKeySaved ? <><CheckCircle size={14} /> Sauvegardé</> : 'Enregistrer'}
+          </button>
+          <button type="button" className="btn-secondary" onClick={testApiKey} disabled={apiTesting || !apiKey.trim()}>
+            {apiTesting ? 'Test...' : 'Tester'}
+          </button>
+        </div>
+        {apiTestResult === 'success' && (
+          <p style={{ color: 'var(--green)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            <CheckCircle size={14} style={{ verticalAlign: 'middle' }} /> Connexion réussie ! Les scores ont été mis à jour.
+          </p>
+        )}
+        {apiTestResult === 'error' && (
+          <p style={{ color: 'var(--red, #ef4444)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            Erreur de connexion. Vérifiez votre clé API.
+          </p>
+        )}
       </div>
 
       {/* Données */}
