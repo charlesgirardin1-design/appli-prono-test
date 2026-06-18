@@ -61,12 +61,12 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
   // MD2
   { homeTeam: { name: 'Suisse' }, awayTeam: { name: 'Bosnie-Herzégovine' },
     date: '2026-06-18T19:00:00Z', competition: 'Groupe B',
-    status: 'finished', homeScore: 1, awayScore: 1,
+    status: 'upcoming',
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Canada' }, awayTeam: { name: 'Qatar' },
     date: '2026-06-18T22:00:00Z', competition: 'Groupe B',
-    status: 'finished', homeScore: 1, awayScore: 0,
+    status: 'upcoming',
     odds: { home: 1.50, draw: 4.20, away: 7.00 } },
 
   // MD3
@@ -424,7 +424,7 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Ghana' }, awayTeam: { name: 'Panama' },
-    date: '2026-06-18T22:00:00Z', competition: 'Groupe L',
+    date: '2026-06-18T03:00:00Z', competition: 'Groupe L',
     status: 'finished', homeScore: 1, awayScore: 0,
     odds: { home: 1.90, draw: 3.40, away: 4.30 } },
 
