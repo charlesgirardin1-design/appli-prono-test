@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Calendar, Users, BarChart3, Menu, X, Star } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
   const [open, setOpen] = React.useState(false);
 
   const links = [
@@ -11,7 +14,13 @@ export default function Navbar() {
     { to: '/favoris', label: 'Favoris', icon: Star },
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
+    { to: '/parametres', label: 'Paramètres', icon: Settings },
   ];
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login');
+  }
 
   return (
     <nav className="navbar">
@@ -36,6 +45,15 @@ export default function Navbar() {
             {label}
           </Link>
         ))}
+        {currentUser && (
+          <div className="nav-user">
+            <div className="nav-avatar">{currentUser.displayName.charAt(0).toUpperCase()}</div>
+            <span className="nav-username">{currentUser.displayName}</span>
+            <button className="btn-logout" onClick={handleLogout} title="Se déconnecter">
+              <LogOut size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

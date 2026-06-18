@@ -1,8 +1,10 @@
-// Couche données — localStorage (sans authentification)
 import { db } from './storage';
 import { Match, Prono, Group, LeaderboardEntry, Favoris } from '../types';
+import { getCurrentUser, getUserById } from './auth';
+import { getPseudo } from './settings';
 
-const PLAYER_ID = 'player_solo'; // identifiant unique joueur local
+const pid = () => getCurrentUser()?.uid || 'anonymous';
+const pseudo = () => getCurrentUser()?.displayName || getPseudo();
 
 // ---- MATCHES ----
 export function getMatches(): Promise<Match[]> {
@@ -27,32 +29,28 @@ export function updateMatchScore(matchId: string, homeScore: number, awayScore: 
 // ---- PRONOS ----
 export function getPronos(): Promise<Prono[]> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(all.filter(p => p.userId === PLAYER_ID));
+  return Promise.resolve(all.filter(p => p.userId === pid()));
 }
 
 export function getPronoForMatch(matchId: string): Promise<Prono | null> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(all.find(p => p.userId === PLAYER_ID && p.matchId === matchId) || null);
+  return Promise.resolve(all.find(p => p.userId === pid() && p.matchId === matchId) || null);
 }
 
 export function hasJokerAvailable(): Promise<boolean> {
   const all = db.get<Prono>('pf_pronos');
-  return Promise.resolve(!all.some(p => p.userId === PLAYER_ID && p.joker));
+  return Promise.resolve(!all.some(p => p.userId === pid() && p.joker));
 }
 
 export async function saveProno(
-  matchId: string,
-  homeScore: number,
-  awayScore: number,
-  joker: boolean
+  matchId: string, homeScore: number, awayScore: number, joker: boolean
 ): Promise<void> {
   const all = db.get<Prono>('pf_pronos');
+  const me = pid();
 
   if (joker) {
     const updated = all.map(p =>
-      p.userId === PLAYER_ID && p.joker && p.matchId !== matchId
-        ? { ...p, joker: false }
-        : p
+      p.userId === me && p.joker && p.matchId !== matchId ? { ...p, joker: false } : p
     );
     db.set('pf_pronos', updated);
   }
@@ -62,8 +60,7 @@ export async function saveProno(
     db.upsert('pf_pronos', { ...existing, homeScore, awayScore, joker });
   } else {
     db.upsert('pf_pronos', {
-      id: db.newId(),
-      userId: PLAYER_ID, matchId, homeScore, awayScore, joker,
+      id: db.newId(), userId: me, matchId, homeScore, awayScore, joker,
       createdAt: new Date().toISOString(),
     });
   }
@@ -106,17 +103,28 @@ function computePoints(matchId: string, realHome: number, realAway: number, odds
     const totalPoints = p.joker ? subtotal * 2 : subtotal;
     return { ...p, points: trendPoints, bonusExact, totalPoints };
   });
-
   db.set('pf_pronos', updated);
 }
 
 // ---- GROUPS ----
+// Le code encode les infos du groupe en base64 pour permettre le partage entre appareils
+function encodeGroupCode(group: { id: string; name: string }): string {
+  try {
+    return btoa(JSON.stringify({ id: group.id, name: group.name }))
+      .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+      .substring(0, 10).toUpperCase();
+  } catch {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+}
+
 export function createGroup(name: string): Promise<Group> {
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const id = db.newId();
+  const code = encodeGroupCode({ id, name });
   const group: Group = {
-    id: db.newId(), name, code,
-    creatorId: PLAYER_ID,
-    members: [PLAYER_ID],
+    id, name, code,
+    creatorId: pid(),
+    members: [pid()],
     createdAt: new Date().toISOString(),
   };
   db.upsert('pf_groups', group);
@@ -125,18 +133,47 @@ export function createGroup(name: string): Promise<Group> {
 
 export function joinGroup(code: string): Promise<Group | null> {
   const all = db.get<Group>('pf_groups');
-  const group = all.find(g => g.code === code.toUpperCase());
-  if (!group) return Promise.resolve(null);
-  if (!group.members.includes(PLAYER_ID)) {
-    db.upsert('pf_groups', { ...group, members: [...group.members, PLAYER_ID] });
-    return Promise.resolve({ ...group, members: [...group.members, PLAYER_ID] });
+  const me = pid();
+
+  // Chercher dans les groupes locaux
+  const found = all.find(g => g.code.toUpperCase() === code.toUpperCase());
+  if (found) {
+    if (!found.members.includes(me)) {
+      const updated = { ...found, members: [...found.members, me] };
+      db.upsert('pf_groups', updated);
+      return Promise.resolve(updated);
+    }
+    return Promise.resolve(found);
   }
-  return Promise.resolve(group);
+
+  // Essayer de décoder depuis le code (groupe partagé depuis un autre appareil)
+  try {
+    const padded = code.replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(padded);
+    const data = JSON.parse(json);
+    if (data.id && data.name) {
+      const group: Group = {
+        id: data.id, name: data.name, code: code.toUpperCase(),
+        creatorId: 'shared',
+        members: [me],
+        createdAt: new Date().toISOString(),
+      };
+      db.upsert('pf_groups', group);
+      return Promise.resolve(group);
+    }
+  } catch {}
+
+  return Promise.resolve(null);
 }
 
 export function getUserGroups(): Promise<Group[]> {
   const all = db.get<Group>('pf_groups');
-  return Promise.resolve(all.filter(g => g.members.includes(PLAYER_ID)));
+  return Promise.resolve(all.filter(g => g.members.includes(pid())));
+}
+
+export function deleteGroup(groupId: string): Promise<void> {
+  db.remove('pf_groups', groupId);
+  return Promise.resolve();
 }
 
 // ---- LEADERBOARD ----
@@ -148,7 +185,7 @@ export function getLeaderboard(): Promise<LeaderboardEntry[]> {
     if (!stats[p.userId]) {
       stats[p.userId] = {
         userId: p.userId,
-        displayName: p.userId === PLAYER_ID ? 'Moi' : p.userId,
+        displayName: p.userId === pid() ? pseudo() : (getUserById(p.userId)?.displayName || p.userId),
         totalPoints: 0, exactScores: 0, correctTrends: 0, pronos: 0,
       };
     }
@@ -164,17 +201,18 @@ export function getLeaderboard(): Promise<LeaderboardEntry[]> {
 
 // ---- FAVORIS ----
 export function saveFavoris(winner: string, topScorer: string): Promise<void> {
+  const me = pid();
   const all = db.get<Favoris & { id: string }>('pf_favoris');
-  const existing = all.find(f => f.userId === PLAYER_ID);
+  const existing = all.find(f => f.userId === me);
   if (existing) {
     db.upsert('pf_favoris', { ...existing, winner, topScorer });
   } else {
-    db.upsert('pf_favoris', { id: PLAYER_ID, userId: PLAYER_ID, winner, topScorer });
+    db.upsert('pf_favoris', { id: me, userId: me, winner, topScorer });
   }
   return Promise.resolve();
 }
 
 export function getFavoris(): Promise<Favoris | null> {
   const all = db.get<Favoris & { id: string }>('pf_favoris');
-  return Promise.resolve(all.find(f => f.userId === PLAYER_ID) || null);
+  return Promise.resolve(all.find(f => f.userId === pid()) || null);
 }

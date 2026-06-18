@@ -5,8 +5,9 @@ import { StoredUser } from '../lib/auth';
 interface AuthContextType {
   currentUser: StoredUser | null;
   loading: boolean;
-  signup: (email: string, password: string, displayName: string) => Promise<void>;
+  signup: (email: string, password: string, displayName?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOAuth: (opts: { email: string; displayName: string; provider: 'google' | 'apple'; avatar?: string; providerUid?: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -19,7 +20,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(() => authLib.getCurrentUser());
 
-  async function signup(email: string, password: string, displayName: string) {
+  async function signup(email: string, password: string, displayName?: string) {
     const user = authLib.signup(email, password, displayName);
     setCurrentUser(user);
   }
@@ -29,13 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(user);
   }
 
+  async function loginWithOAuth(opts: { email: string; displayName: string; provider: 'google' | 'apple'; avatar?: string; providerUid?: string }) {
+    const user = authLib.loginWithOAuth(opts);
+    setCurrentUser(user);
+  }
+
   async function logout() {
     authLib.logout();
     setCurrentUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading: false, signup, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading: false, signup, login, loginWithOAuth, logout }}>
       {children}
     </AuthContext.Provider>
   );

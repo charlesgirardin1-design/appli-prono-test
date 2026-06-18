@@ -5,6 +5,8 @@ import { recordPronoToday } from '../hooks/useStreak';
 import { fireConfetti } from '../hooks/useConfetti';
 import Countdown from './Countdown';
 import { CheckCircle, Zap, Star } from 'lucide-react';
+import { FlagImg } from '../lib/flags';
+import { getEffectiveStatus } from '../lib/matchStatus';
 
 interface Props {
   match: Match;
@@ -22,7 +24,9 @@ export default function MatchCard({ match }: Props) {
   const [revealed, setRevealed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const isPast = match.status !== 'upcoming';
+  const effectiveStatus = getEffectiveStatus(match);
+  const isLive = effectiveStatus === 'live';
+  const isPast = effectiveStatus !== 'upcoming';
 
   useEffect(() => {
     getPronoForMatch(match.id).then(p => {
@@ -96,27 +100,41 @@ export default function MatchCard({ match }: Props) {
   return (
     <div
       ref={cardRef}
-      className={`match-card ${match.status} ${existing?.joker ? 'has-joker' : ''} ${flipped ? 'is-flipped' : ''}`}
+      className={`match-card ${effectiveStatus} ${existing?.joker ? 'has-joker' : ''} ${flipped ? 'is-flipped' : ''}`}
     >
       <div className="card-inner">
         {/* FACE AVANT */}
         <div className="card-front">
           <div className="match-meta">
             <span className="competition">{match.competition}</span>
-            {!isPast && (
-              <Countdown targetDate={match.date} />
-            )}
-            {isPast && (
-              <span className="status-badge finished">Terminé</span>
-            )}
+            <div className="match-meta-right">
+              {effectiveStatus === 'upcoming' && (
+                <span className="match-localtime">
+                  {new Date(match.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                  {' '}
+                  {new Date(match.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+              {effectiveStatus === 'upcoming' && <Countdown targetDate={match.date} />}
+              {isLive && (
+                <span className="status-badge live">
+                  <span className="live-dot" />
+                  En cours
+                </span>
+              )}
+              {effectiveStatus === 'finished' && <span className="status-badge finished">Terminé</span>}
+            </div>
           </div>
 
           <div className="match-teams">
             <div className="team">
+              <FlagImg name={match.homeTeam.name} size={28} />
               <span className="team-name">{match.homeTeam.name}</span>
             </div>
             <div className="match-score">
-              {isPast ? (
+              {isLive ? (
+                <span className="live-score">{match.homeScore ?? '?'} - {match.awayScore ?? '?'}</span>
+              ) : effectiveStatus === 'finished' ? (
                 <span className="final-score">{match.homeScore} - {match.awayScore}</span>
               ) : (
                 <span className="vs">VS</span>
@@ -124,24 +142,40 @@ export default function MatchCard({ match }: Props) {
             </div>
             <div className="team away">
               <span className="team-name">{match.awayTeam.name}</span>
+              <FlagImg name={match.awayTeam.name} size={28} />
             </div>
           </div>
 
-          {match.odds && (
-            <div className="odds-row">
-              {[
-                { label: match.homeTeam.name.split(' ')[0], val: match.odds.home },
-                { label: 'Nul', val: match.odds.draw },
-                { label: match.awayTeam.name.split(' ')[0], val: match.odds.away },
-              ].map(({ label, val }) => (
-                <div key={label} className="odd-item">
-                  <span className="odd-label">{label}</span>
-                  <span className="odd-value">{val.toFixed(2)}</span>
-                  <span className="odd-pts">{Math.round(val * 10)} pts</span>
-                </div>
-              ))}
+          {match.odds && (() => {
+            const { home, draw, away } = match.odds;
+            const inv = (v: number) => 1 / v;
+            const total = inv(home) + inv(draw) + inv(away);
+            const pct = (v: number) => Math.round((inv(v) / total) * 100);
+            return (
+            <div className="odds-section">
+              <div className="odds-header">
+                <span className="odds-title">Cotes</span>
+                <span className="odds-hint" title="La cote indique la difficulté du pronostic. Plus elle est élevée, plus les points rapportés sont importants. Ex : cote 3.10 = 31 pts si bonne tendance.">
+                  ℹ️ Cote × 10 = pts
+                </span>
+              </div>
+              <div className="odds-row">
+                {[
+                  { label: match.homeTeam.name.split(' ')[0], val: home, prob: pct(home) },
+                  { label: 'Nul', val: draw, prob: pct(draw) },
+                  { label: match.awayTeam.name.split(' ')[0], val: away, prob: pct(away) },
+                ].map(({ label, val, prob }) => (
+                  <div key={label} className="odd-item">
+                    <span className="odd-label">{label}</span>
+                    <span className="odd-prob">{prob}%</span>
+                    <span className="odd-value">{val.toFixed(2)}</span>
+                    <span className="odd-pts">{Math.round(val * 10)} pts</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+            );
+          })()}
 
           {!isPast && (
             <form onSubmit={handleSubmit} className="prono-form">
@@ -173,7 +207,13 @@ export default function MatchCard({ match }: Props) {
             </div>
           )}
 
-          {isPast && !existing && (
+          {isLive && !existing && (
+            <div className="prono-locked">
+              En cours - Pronos fermés
+            </div>
+          )}
+
+          {effectiveStatus === 'finished' && !existing && (
             <div className="prono-result no-prono">
               <span className="prono-label">Aucun prono soumis</span>
             </div>
