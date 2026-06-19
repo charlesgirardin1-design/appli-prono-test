@@ -24,7 +24,11 @@ export default function Home() {
   useEffect(() => {
     loadData();
     window.addEventListener('pf_matches_updated', loadData);
-    return () => window.removeEventListener('pf_matches_updated', loadData);
+    const interval = setInterval(loadData, 60_000);
+    return () => {
+      window.removeEventListener('pf_matches_updated', loadData);
+      clearInterval(interval);
+    };
   }, []);
 
   const filtered = matches.filter(m => filter === 'all' || getEffectiveStatus(m) === filter);

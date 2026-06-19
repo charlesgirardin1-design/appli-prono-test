@@ -6,6 +6,7 @@ export function getEffectiveStatus(match: Match): 'upcoming' | 'live' | 'finishe
   if (match.status === 'live') return 'live';
   const matchTime = new Date(match.date).getTime();
   const now = Date.now();
-  if (now >= matchTime && now < matchTime + MATCH_DURATION_MS) return 'live';
+  if (now >= matchTime + MATCH_DURATION_MS) return 'finished';
+  if (now >= matchTime) return 'live';
   return 'upcoming';
 }
