@@ -1,7 +1,7 @@
 import { db } from './storage';
 import { Match } from '../types';
 
-// Mapping English API names → French names used in the app
+// Mapping English API names → French names used in the app (must match seed data exactly)
 const TEAM_NAME_MAP: Record<string, string> = {
   // Group A
   'United States': 'États-Unis',
@@ -38,7 +38,7 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'Japan': 'Japon',
   'South Korea': 'Corée du Sud',
   'Korea Republic': 'Corée du Sud',
-  'Saudi Arabia': 'Arabie saoudite',
+  'Saudi Arabia': 'Arabie Saoudite',
   'Iran': 'Iran',
   // Group H
   'Belgium': 'Belgique',
@@ -60,38 +60,33 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'Poland': 'Pologne',
   'Ukraine': 'Ukraine',
   'Romania': 'Roumanie',
-  'Turkey': 'Turquie',
-  'Türkiye': 'Turquie',
+  'Turkey': 'Türkiye',
+  'Türkiye': 'Türkiye',
   // Group L
   'New Zealand': 'Nouvelle-Zélande',
   'Indonesia': 'Indonésie',
   'Qatar': 'Qatar',
   'Panama': 'Panama',
-  // Additional common names
-  'Russia': 'Russie',
-  'Serbia': 'Serbie',
-  'Slovakia': 'Slovaquie',
-  'Czech Republic': 'République tchèque',
-  'Czechia': 'République tchèque',
-  'Wales': 'Pays de Galles',
+  // Additional — must match seed data names exactly
+  'Czech Republic': 'Tchéquie',
+  'Czechia': 'Tchéquie',
+  'Bosnia and Herzegovina': 'Bosnie-Herzégovine',
+  'Bosnia & Herzegovina': 'Bosnie-Herzégovine',
   'Scotland': 'Écosse',
-  'Ireland': 'Irlande',
   'Ghana': 'Ghana',
   'Tunisia': 'Tunisie',
-  'Mali': 'Mali',
-  'Honduras': 'Honduras',
-  'Guatemala': 'Guatemala',
-  'Jamaica': 'Jamaïque',
-  'Trinidad and Tobago': 'Trinité-et-Tobago',
-  'El Salvador': 'Salvador',
   'Curaçao': 'Curaçao',
-  'China': 'Chine',
-  "China PR": 'Chine',
-  'Thailand': 'Thaïlande',
-  'Vietnam': 'Viêt Nam',
+  'Cabo Verde': 'Cabo Verde',
+  'Cape Verde': 'Cabo Verde',
   'Iraq': 'Irak',
   'Uzbekistan': 'Ouzbékistan',
-  'Syria': 'Syrie',
+  'Jordan': 'Jordanie',
+  'Congo DR': 'Congo DR',
+  'DR Congo': 'Congo DR',
+  'Democratic Republic of Congo': 'Congo DR',
+  'Norway': 'Norvège',
+  'Sweden': 'Suède',
+  'Haiti': 'Haïti',
 };
 
 type ApiStatus = 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'TIMED' | 'SCHEDULED' | string;
