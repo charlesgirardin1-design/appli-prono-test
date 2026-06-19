@@ -195,6 +195,8 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   for (const m of liveMatches) matchesById.set(m.id, m); // override with live data
 
   const apiMatchList = Array.from(matchesById.values());
+  console.log('[LiveScores] API returned', apiMatchList.length, 'matches');
+  console.log('[LiveScores] Sample API names:', apiMatchList.slice(0, 5).map(m => `${m.homeTeam.name} vs ${m.awayTeam.name} (${m.status})`));
 
   let updated = false;
   const updatedMatches = localMatches.map(local => {
@@ -202,7 +204,12 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
       findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined
     );
 
-    if (!found) return local;
+    if (!found) {
+      if (local.status === 'finished' || local.status === 'live') {
+        console.warn('[LiveScores] No API match for:', local.homeTeam.name, 'vs', local.awayTeam.name);
+      }
+      return local;
+    }
 
     const newStatus = mapStatus(found.status);
     // For live matches, null score means 0-0
