@@ -135,7 +135,7 @@ export default function MatchCard({ match }: Props) {
               {isLive ? (
                 <span className="live-score">{match.homeScore ?? '?'} - {match.awayScore ?? '?'}</span>
               ) : effectiveStatus === 'finished' ? (
-                <span className="final-score">{match.homeScore} - {match.awayScore}</span>
+                <span className="final-score">{match.homeScore ?? '?'} - {match.awayScore ?? '?'}</span>
               ) : (
                 <span className="vs">VS</span>
               )}

@@ -186,15 +186,17 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   const localMatches: Match[] = db.get<Match>('pf_matches');
   if (!localMatches.length) return;
 
-  // Fetch all matches + live matches specifically
-  const [allMatches, liveMatches] = await Promise.all([
+  // Fetch all matches + live + finished explicitly
+  const [allMatches, liveMatches, finishedMatches] = await Promise.all([
     fetchMatches(apiKey),
     fetchMatches(apiKey, 'IN_PLAY,PAUSED'),
+    fetchMatches(apiKey, 'FINISHED'),
   ]);
 
-  // Merge: live matches take priority
+  // Merge: live > finished > all
   const matchesById = new Map<number, ApiMatch>();
   for (const m of allMatches) matchesById.set(m.id, m);
+  for (const m of finishedMatches) matchesById.set(m.id, m);
   for (const m of liveMatches) matchesById.set(m.id, m); // override with live data
 
   const apiMatchList = Array.from(matchesById.values());
