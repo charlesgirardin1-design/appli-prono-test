@@ -159,9 +159,9 @@ function findMatchingLocalMatch(
 }
 
 async function fetchMatches(apiKey: string, statusFilter?: string): Promise<ApiMatch[]> {
-  const url = statusFilter
-    ? `https://api.football-data.org/v4/competitions/WC/matches?status=${statusFilter}`
-    : 'https://api.football-data.org/v4/competitions/WC/matches';
+  const params = new URLSearchParams({ season: '2026' });
+  if (statusFilter) params.set('status', statusFilter);
+  const url = `https://api.football-data.org/v4/competitions/WC/matches?${params}`;
 
   const response = await fetch(url, {
     headers: { 'X-Auth-Token': apiKey },
