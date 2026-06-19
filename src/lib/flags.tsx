@@ -42,16 +42,17 @@ export function getFlagUrl(countryName: string, size: number = 32): string {
 export function FlagImg({
   name, size = 24, className = '',
 }: { name: string; size?: number; className?: string }) {
-  const emoji = getEmojiFlag(name);
-  if (!emoji) return null;
+  const code = FLAG_CODES[name];
+  if (!code) return null;
+  const url = `https://flagcdn.com/w${size * 2}/${code.toLowerCase()}.png`;
   return (
-    <span
-      className={`flag-emoji ${className}`}
-      style={{ fontSize: size, lineHeight: 1 }}
-      role="img"
-      aria-label={name}
-    >
-      {emoji}
-    </span>
+    <img
+      src={url}
+      alt={name}
+      width={size * 1.33}
+      height={size}
+      className={`flag-img ${className}`}
+      style={{ objectFit: 'cover', borderRadius: 2, display: 'inline-block', verticalAlign: 'middle' }}
+    />
   );
 }
