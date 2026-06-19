@@ -44,7 +44,9 @@ export function FlagImg({
 }: { name: string; size?: number; className?: string }) {
   const code = FLAG_CODES[name];
   if (!code) return null;
-  const url = `https://flagcdn.com/w${size * 2}/${code.toLowerCase()}.png`;
+  // flagcdn.com only supports specific sizes: 20, 40, 80, 160...
+  const cdnSize = size <= 20 ? 20 : size <= 40 ? 40 : 80;
+  const url = `https://flagcdn.com/w${cdnSize}/${code.toLowerCase()}.png`;
   return (
     <img
       src={url}
