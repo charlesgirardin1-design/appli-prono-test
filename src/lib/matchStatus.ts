@@ -1,6 +1,4 @@
 import { Match } from '../types';
-// 150min = live window (90min + extra time + penalties)
-const LIVE_WINDOW_MS = 150 * 60 * 1000;
 // 3h fallback: if API hasn't confirmed finished, auto-close after 3h (covers any match)
 const AUTO_FINISH_MS = 3 * 60 * 60 * 1000;
 
