@@ -159,33 +159,31 @@ function findMatchingLocalMatch(
 }
 
 async function fetchMatches(apiKey: string, statusFilter?: string): Promise<ApiMatch[]> {
-  // Try with season=2026 first, fallback without season if empty
-  const params = new URLSearchParams({ season: '2026' });
-  if (statusFilter) params.set('status', statusFilter);
-  const url = `https://api.football-data.org/v4/competitions/WC/matches?${params}`;
-
-  const response = await fetch(url, {
-    headers: { 'X-Auth-Token': apiKey },
-  });
-
-  if (!response.ok) {
-    console.error('[LiveScores] API error:', response.status, response.statusText, url);
-    // Try without season as fallback
-    if (response.status === 400 || response.status === 404) {
-      const fallbackParams = statusFilter ? `?status=${statusFilter}` : '';
-      const fallbackUrl = `https://api.football-data.org/v4/competitions/WC/matches${fallbackParams}`;
-      const fallbackResp = await fetch(fallbackUrl, { headers: { 'X-Auth-Token': apiKey } });
-      if (!fallbackResp.ok) throw new Error(`API error: ${fallbackResp.status}`);
-      const fallbackData: ApiResponse = await fallbackResp.json();
-      console.log('[LiveScores] Fallback fetched', (fallbackData.matches || []).length, 'matches');
-      return fallbackData.matches || [];
+  const tryFetch = async (withSeason: boolean): Promise<ApiMatch[] | null> => {
+    const params = new URLSearchParams();
+    if (withSeason) params.set('season', '2026');
+    if (statusFilter) params.set('status', statusFilter);
+    const qs = params.toString() ? `?${params}` : '';
+    const url = `https://api.football-data.org/v4/competitions/WC/matches${qs}`;
+    const resp = await fetch(url, { headers: { 'X-Auth-Token': apiKey } });
+    if (!resp.ok) {
+      console.warn('[LiveScores] HTTP', resp.status, url);
+      return null;
     }
-    throw new Error(`football-data.org API error: ${response.status} ${response.statusText}`);
-  }
+    const data: ApiResponse = await resp.json();
+    const matches = data.matches || [];
+    console.log('[LiveScores] Fetched', matches.length, 'matches', withSeason ? '(season=2026)' : '(no season)', statusFilter || '');
+    return matches;
+  };
 
-  const data: ApiResponse = await response.json();
-  console.log('[LiveScores] Fetched', (data.matches || []).length, 'matches from', url);
-  return data.matches || [];
+  // Try without season first (most permissive), then with season as fallback
+  const withoutSeason = await tryFetch(false);
+  if (withoutSeason && withoutSeason.length > 0) return withoutSeason;
+
+  const withSeason = await tryFetch(true);
+  if (withSeason && withSeason.length > 0) return withSeason;
+
+  return [];
 }
 
 export async function fetchAndUpdateScores(apiKey: string): Promise<void> {

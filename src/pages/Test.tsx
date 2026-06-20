@@ -3,8 +3,36 @@ import { FlaskConical } from 'lucide-react';
 import { db } from '../lib/storage';
 import { Match } from '../types';
 import { getEffectiveStatus } from '../lib/matchStatus';
+import { fetchAndUpdateScores } from '../lib/liveScores';
 
 const API_KEY = 'e17c642125d94af9bf0b31676463b862';
+
+// Même mapping que liveScores.ts pour la traduction
+const TEAM_NAME_MAP: Record<string, string> = {
+  'United States': 'États-Unis', 'USA': 'États-Unis', 'Mexico': 'Mexique',
+  'Canada': 'Canada', 'Argentina': 'Argentine', 'Chile': 'Chili', 'Peru': 'Pérou',
+  'Australia': 'Australie', 'Brazil': 'Brésil', 'Colombia': 'Colombie', 'Uruguay': 'Uruguay',
+  'Paraguay': 'Paraguay', 'France': 'France', 'England': 'Angleterre', 'Germany': 'Allemagne',
+  'Portugal': 'Portugal', 'Spain': 'Espagne', 'Italy': 'Italie', 'Netherlands': 'Pays-Bas',
+  'Holland': 'Pays-Bas', 'Croatia': 'Croatie', 'Morocco': 'Maroc', 'Senegal': 'Sénégal',
+  'South Africa': 'Afrique du Sud', 'Cameroon': 'Cameroun', 'Japan': 'Japon',
+  'South Korea': 'Corée du Sud', 'Korea Republic': 'Corée du Sud', 'Saudi Arabia': 'Arabie Saoudite',
+  'Iran': 'Iran', 'Belgium': 'Belgique', 'Denmark': 'Danemark', 'Austria': 'Autriche',
+  'Switzerland': 'Suisse', 'Ecuador': 'Équateur', 'Venezuela': 'Venezuela', 'Bolivia': 'Bolivie',
+  'Costa Rica': 'Costa Rica', 'Egypt': 'Égypte', 'Nigeria': 'Nigéria', 'Algeria': 'Algérie',
+  'Ivory Coast': "Côte d'Ivoire", "Côte d'Ivoire": "Côte d'Ivoire", 'Poland': 'Pologne',
+  'Ukraine': 'Ukraine', 'Romania': 'Roumanie', 'Turkey': 'Türkiye', 'Türkiye': 'Türkiye',
+  'New Zealand': 'Nouvelle-Zélande', 'Indonesia': 'Indonésie', 'Qatar': 'Qatar', 'Panama': 'Panama',
+  'Czech Republic': 'Tchéquie', 'Czechia': 'Tchéquie', 'Bosnia and Herzegovina': 'Bosnie-Herzégovine',
+  'Bosnia & Herzegovina': 'Bosnie-Herzégovine', 'Scotland': 'Écosse', 'Ghana': 'Ghana',
+  'Tunisia': 'Tunisie', 'Curaçao': 'Curaçao', 'Cabo Verde': 'Cabo Verde', 'Cape Verde': 'Cabo Verde',
+  'Iraq': 'Irak', 'Uzbekistan': 'Ouzbékistan', 'Jordan': 'Jordanie', 'Congo DR': 'Congo DR',
+  'DR Congo': 'Congo DR', 'Norway': 'Norvège', 'Sweden': 'Suède', 'Haiti': 'Haïti',
+};
+
+function toFrench(name: string): string {
+  return TEAM_NAME_MAP[name] || name;
+}
 
 function normalizeForComparison(name: string): string {
   return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
@@ -55,13 +83,15 @@ export default function TestPage() {
           });
         }
 
-        // Check matching against local
+        // Check matching against local (avec traduction)
         const localMatches: Match[] = db.get<Match>('pf_matches');
-        addLog('--- Correspondance API ↔ Local ---');
+        addLog('--- Correspondance API ↔ Local (avec traduction) ---');
         let matched = 0, unmatched = 0;
         finished.forEach((api: any) => {
-          const normApiHome = normalizeForComparison(api.homeTeam.name);
-          const normApiAway = normalizeForComparison(api.awayTeam.name);
+          const frHome = toFrench(api.homeTeam.name);
+          const frAway = toFrench(api.awayTeam.name);
+          const normApiHome = normalizeForComparison(frHome);
+          const normApiAway = normalizeForComparison(frAway);
           const found = localMatches.find(l =>
             normalizeForComparison(l.homeTeam.name) === normApiHome &&
             normalizeForComparison(l.awayTeam.name) === normApiAway
@@ -70,23 +100,13 @@ export default function TestPage() {
             matched++;
           } else {
             unmatched++;
-            addLog(`  ❌ PAS trouvé en local : "${api.homeTeam.name}" vs "${api.awayTeam.name}"`, 'red');
+            addLog(`  ❌ "${api.homeTeam.name}"→"${frHome}" / "${api.awayTeam.name}"→"${frAway}" non trouvé`, 'red');
           }
         });
         addLog(`Matchés : ${matched}/${finished.length} terminés`, matched === finished.length ? 'green' : 'red');
       } else {
         const text = await r1.text();
         addLog(`Erreur : ${text.slice(0, 200)}`, 'red');
-        // Try without season
-        addLog('Test sans season=2026...');
-        const r2 = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
-          headers: { 'X-Auth-Token': apiKey },
-        });
-        addLog(`HTTP sans season : ${r2.status} ${r2.statusText}`);
-        if (r2.ok) {
-          const d2 = await r2.json();
-          addLog(`→ ${(d2.matches || []).length} matchs`, 'green');
-        }
       }
     } catch (e: any) {
       addLog(`Erreur réseau : ${e.message}`, 'red');
@@ -97,45 +117,24 @@ export default function TestPage() {
 
   async function forceUpdate() {
     setLoading(true);
-    addLog('=== MISE À JOUR FORCÉE ===');
+    addLog('=== MISE À JOUR FORCÉE (via fetchAndUpdateScores) ===');
     const apiKey = localStorage.getItem('pf_football_api_key') || API_KEY;
+    const before: Match[] = db.get<Match>('pf_matches');
+    const beforeFinished = before.filter(m => m.status === 'finished').length;
     try {
-      const resp = await fetch('https://api.football-data.org/v4/competitions/WC/matches?season=2026', {
-        headers: { 'X-Auth-Token': apiKey },
+      await fetchAndUpdateScores(apiKey);
+      const after: Match[] = db.get<Match>('pf_matches');
+      const afterFinished = after.filter(m => m.status === 'finished').length;
+      const withScore = after.filter(m => m.status === 'finished' && m.homeScore !== undefined);
+      addLog(`Terminés : ${beforeFinished} → ${afterFinished}, avec score : ${withScore.length}`, 'green');
+      withScore.slice(0, 10).forEach(m => {
+        addLog(`  ✅ ${m.homeTeam.name} ${m.homeScore}-${m.awayScore} ${m.awayTeam.name}`);
       });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      const apiMatches = data.matches || [];
-      const localMatches: Match[] = db.get<Match>('pf_matches');
-
-      let updCount = 0;
-      const updated = localMatches.map(local => {
-        const normLocalHome = normalizeForComparison(local.homeTeam.name);
-        const normLocalAway = normalizeForComparison(local.awayTeam.name);
-        const found = apiMatches.find((api: any) =>
-          normalizeForComparison(api.homeTeam.name) === normLocalHome &&
-          normalizeForComparison(api.awayTeam.name) === normLocalAway
-        );
-        if (!found) return local;
-
-        const apiStatus = found.status;
-        const newStatus = (apiStatus === 'IN_PLAY' || apiStatus === 'PAUSED') ? 'live' :
-          apiStatus === 'FINISHED' ? 'finished' : 'upcoming';
-        const isActive = newStatus === 'live' || newStatus === 'finished';
-        const newHome = found.score.fullTime.home !== null ? found.score.fullTime.home : (isActive ? 0 : undefined);
-        const newAway = found.score.fullTime.away !== null ? found.score.fullTime.away : (isActive ? 0 : undefined);
-
-        if (local.status !== newStatus || local.homeScore !== newHome || local.awayScore !== newAway) {
-          updCount++;
-          addLog(`✅ ${local.homeTeam.name} ${newHome ?? '?'}-${newAway ?? '?'} ${local.awayTeam.name} (${newStatus})`, 'green');
-          return { ...local, status: newStatus as Match['status'], homeScore: newHome, awayScore: newAway };
-        }
-        return local;
-      });
-
-      db.set('pf_matches', updated);
-      window.dispatchEvent(new Event('pf_matches_updated'));
-      addLog(`${updCount} matchs mis à jour`, updCount > 0 ? 'green' : undefined);
+      const live = after.filter(m => m.status === 'live');
+      if (live.length > 0) {
+        addLog(`En cours : ${live.length}`);
+        live.forEach(m => addLog(`  🔴 ${m.homeTeam.name} ${m.homeScore ?? 0}-${m.awayScore ?? 0} ${m.awayTeam.name}`, 'green'));
+      }
     } catch (e: any) {
       addLog(`Erreur : ${e.message}`, 'red');
     } finally {
