@@ -158,32 +158,27 @@ function findMatchingLocalMatch(
   });
 }
 
-async function fetchMatches(apiKey: string, statusFilter?: string): Promise<ApiMatch[]> {
-  const tryFetch = async (withSeason: boolean): Promise<ApiMatch[] | null> => {
-    const params = new URLSearchParams();
-    if (withSeason) params.set('season', '2026');
-    if (statusFilter) params.set('status', statusFilter);
-    const qs = params.toString() ? `?${params}` : '';
-    const url = `https://api.football-data.org/v4/competitions/WC/matches${qs}`;
-    const resp = await fetch(url, { headers: { 'X-Auth-Token': apiKey } });
+async function fetchMatches(_apiKey: string, statusFilter?: string): Promise<ApiMatch[]> {
+  // Use our serverless proxy to avoid CORS issues
+  const params = new URLSearchParams();
+  if (statusFilter) params.set('status', statusFilter);
+  const qs = params.toString() ? `?${params}` : '';
+  const url = `/api/scores${qs}`;
+
+  try {
+    const resp = await fetch(url);
     if (!resp.ok) {
-      console.warn('[LiveScores] HTTP', resp.status, url);
-      return null;
+      console.warn('[LiveScores] Proxy HTTP', resp.status, url);
+      return [];
     }
     const data: ApiResponse = await resp.json();
     const matches = data.matches || [];
-    console.log('[LiveScores] Fetched', matches.length, 'matches', withSeason ? '(season=2026)' : '(no season)', statusFilter || '');
+    console.log('[LiveScores] Fetched', matches.length, 'matches via proxy', statusFilter || '(all)');
     return matches;
-  };
-
-  // Try without season first (most permissive), then with season as fallback
-  const withoutSeason = await tryFetch(false);
-  if (withoutSeason && withoutSeason.length > 0) return withoutSeason;
-
-  const withSeason = await tryFetch(true);
-  if (withSeason && withSeason.length > 0) return withSeason;
-
-  return [];
+  } catch (e) {
+    console.error('[LiveScores] Fetch error:', e);
+    return [];
+  }
 }
 
 export async function fetchAndUpdateScores(apiKey: string): Promise<void> {

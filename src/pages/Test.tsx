@@ -52,16 +52,11 @@ export default function TestPage() {
 
   async function diagnoseApi() {
     setLoading(true);
-    addLog('=== DIAGNOSTIC API football-data.org ===');
-    const apiKey = localStorage.getItem('pf_football_api_key') || API_KEY;
-    addLog(`Clé utilisée : ${apiKey.slice(0, 8)}...`);
+    addLog('=== DIAGNOSTIC API (via proxy /api/scores) ===');
 
     try {
-      // Test 1: avec season=2026
-      const r1 = await fetch('https://api.football-data.org/v4/competitions/WC/matches?season=2026', {
-        headers: { 'X-Auth-Token': apiKey },
-      });
-      addLog(`HTTP avec season=2026 : ${r1.status} ${r1.statusText}`);
+      const r1 = await fetch('/api/scores');
+      addLog(`HTTP proxy : ${r1.status} ${r1.statusText}`);
       if (r1.ok) {
         const d1 = await r1.json();
         const matches = d1.matches || [];

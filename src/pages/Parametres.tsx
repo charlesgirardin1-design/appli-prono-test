@@ -66,20 +66,18 @@ export default function ParametresPage() {
     setApiTestResult(null);
     setApiTestMsg('');
     try {
-      const key = apiKey.trim();
-      const resp = await fetch('https://api.football-data.org/v4/competitions/WC/matches?season=2026', {
-        headers: { 'X-Auth-Token': key },
-      });
+      const resp = await fetch('/api/scores');
       if (!resp.ok) {
         setApiTestResult('error');
-        setApiTestMsg(`Erreur API ${resp.status} : ${resp.statusText}`);
+        setApiTestMsg(`Erreur proxy ${resp.status} : ${resp.statusText}`);
       } else {
         const data = await resp.json();
         const count = (data.matches || []).length;
         const finished = (data.matches || []).filter((m: any) => m.status === 'FINISHED').length;
+        const live = (data.matches || []).filter((m: any) => m.status === 'IN_PLAY' || m.status === 'PAUSED').length;
         setApiTestResult('success');
-        setApiTestMsg(`${count} matchs trouvés (${finished} terminés)`);
-        await fetchAndUpdateScores(key);
+        setApiTestMsg(`${count} matchs (${finished} terminés, ${live} en cours)`);
+        await fetchAndUpdateScores(apiKey.trim());
       }
     } catch (e: any) {
       setApiTestResult('error');
