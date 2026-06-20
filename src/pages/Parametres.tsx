@@ -14,6 +14,7 @@ export default function ParametresPage() {
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [apiTesting, setApiTesting] = useState(false);
   const [apiTestResult, setApiTestResult] = useState<'success' | 'error' | null>(null);
+  const [apiTestMsg, setApiTestMsg] = useState('');
 
   useEffect(() => {
     const s = getSettings();
@@ -63,14 +64,29 @@ export default function ParametresPage() {
     if (!apiKey.trim()) return;
     setApiTesting(true);
     setApiTestResult(null);
+    setApiTestMsg('');
     try {
-      await fetchAndUpdateScores(apiKey.trim());
-      setApiTestResult('success');
-    } catch {
+      const key = apiKey.trim();
+      const resp = await fetch('https://api.football-data.org/v4/competitions/WC/matches?season=2026', {
+        headers: { 'X-Auth-Token': key },
+      });
+      if (!resp.ok) {
+        setApiTestResult('error');
+        setApiTestMsg(`Erreur API ${resp.status} : ${resp.statusText}`);
+      } else {
+        const data = await resp.json();
+        const count = (data.matches || []).length;
+        const finished = (data.matches || []).filter((m: any) => m.status === 'FINISHED').length;
+        setApiTestResult('success');
+        setApiTestMsg(`${count} matchs trouvés (${finished} terminés)`);
+        await fetchAndUpdateScores(key);
+      }
+    } catch (e: any) {
       setApiTestResult('error');
+      setApiTestMsg(e.message || 'Erreur réseau');
     } finally {
       setApiTesting(false);
-      setTimeout(() => setApiTestResult(null), 4000);
+      setTimeout(() => { setApiTestResult(null); setApiTestMsg(''); }, 8000);
     }
   }
 
@@ -150,12 +166,12 @@ export default function ParametresPage() {
         </div>
         {apiTestResult === 'success' && (
           <p style={{ color: 'var(--green)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-            <CheckCircle size={14} style={{ verticalAlign: 'middle' }} /> Connexion réussie ! Les scores ont été mis à jour.
+            <CheckCircle size={14} style={{ verticalAlign: 'middle' }} /> {apiTestMsg || 'Connexion réussie !'}
           </p>
         )}
         {apiTestResult === 'error' && (
           <p style={{ color: 'var(--red, #ef4444)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-            Erreur de connexion. Vérifiez votre clé API.
+            ⚠️ {apiTestMsg || 'Erreur de connexion. Vérifiez votre clé API.'}
           </p>
         )}
       </div>
