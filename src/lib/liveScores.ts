@@ -194,12 +194,21 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   const localMatches: Match[] = db.get<Match>('pf_matches');
   if (!localMatches.length) return;
 
-  // Fetch all matches + live + finished explicitly
-  const [allMatches, liveMatches, finishedMatches] = await Promise.all([
-    fetchMatches(apiKey),
-    fetchMatches(apiKey, 'IN_PLAY,PAUSED'),
-    fetchMatches(apiKey, 'FINISHED'),
-  ]);
+  // Fetch all matches first (contains live + finished + upcoming with current scores)
+  // Then fetch live separately to get the freshest data (avoid rate limiting with sequential calls)
+  const allMatches = await fetchMatches(apiKey);
+  let liveMatches: ApiMatch[] = [];
+  let finishedMatches: ApiMatch[] = [];
+  try {
+    liveMatches = await fetchMatches(apiKey, 'LIVE');
+  } catch (e) {
+    console.warn('[LiveScores] Could not fetch live matches separately:', e);
+  }
+  try {
+    finishedMatches = await fetchMatches(apiKey, 'FINISHED');
+  } catch (e) {
+    console.warn('[LiveScores] Could not fetch finished matches separately:', e);
+  }
 
   // Merge: live > finished > all
   const matchesById = new Map<number, ApiMatch>();
@@ -208,7 +217,11 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   for (const m of liveMatches) matchesById.set(m.id, m); // override with live data
 
   const apiMatchList = Array.from(matchesById.values());
-  console.log('[LiveScores] API returned', apiMatchList.length, 'matches');
+  const liveFromApi = apiMatchList.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
+  console.log('[LiveScores] API returned', apiMatchList.length, 'matches,', liveFromApi.length, 'live');
+  if (liveFromApi.length > 0) {
+    console.log('[LiveScores] Live matches:', liveFromApi.map(m => `${m.homeTeam.name} ${m.score.fullTime.home ?? '?'}-${m.score.fullTime.away ?? '?'} ${m.awayTeam.name}`));
+  }
   console.log('[LiveScores] Sample API names:', apiMatchList.slice(0, 5).map(m => `${m.homeTeam.name} vs ${m.awayTeam.name} (${m.status})`));
 
   let updated = false;
