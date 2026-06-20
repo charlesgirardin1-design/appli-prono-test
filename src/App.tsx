@@ -11,6 +11,7 @@ import Classement from './pages/Classement';
 import Groupes from './pages/Groupes';
 import Favoris from './pages/Favoris';
 import ParametresPage from './pages/Parametres';
+import TestPage from './pages/Test';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import './App.css';
@@ -78,6 +79,7 @@ function AppRoutes() {
           <Route path="/groupes" element={<PrivateRoute><Groupes /></PrivateRoute>} />
           <Route path="/favoris" element={<PrivateRoute><Favoris /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><ParametresPage /></PrivateRoute>} />
+          <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
