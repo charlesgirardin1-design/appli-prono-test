@@ -168,10 +168,12 @@ async function fetchMatches(apiKey: string, statusFilter?: string): Promise<ApiM
   });
 
   if (!response.ok) {
+    console.error('[LiveScores] API error:', response.status, response.statusText, url);
     throw new Error(`football-data.org API error: ${response.status} ${response.statusText}`);
   }
 
   const data: ApiResponse = await response.json();
+  console.log('[LiveScores] Fetched', (data.matches || []).length, 'matches from', url);
   return data.matches || [];
 }
 
