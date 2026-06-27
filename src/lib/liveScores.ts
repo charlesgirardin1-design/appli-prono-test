@@ -318,32 +318,15 @@ export function dailyRefresh(apiKey: string): void {
 }
 
 export function startLiveScorePolling(apiKey: string): () => void {
-  const LIVE_INTERVAL = 2 * 60 * 1000;  // 2 min pendant les matchs
-  const IDLE_INTERVAL = 10 * 60 * 1000; // 10 min sinon
-
-  let intervalId: ReturnType<typeof setInterval>;
+  const LIVE_INTERVAL = 10 * 60 * 1000; // 10 min pendant les matchs
 
   function poll() {
     if (hasLiveOrImminent()) {
       fetchAndUpdateScores(apiKey).catch(console.error);
-      // Passe en mode rapide si pas déjà fait
-      if ((intervalId as any)._delay !== LIVE_INTERVAL) {
-        clearInterval(intervalId);
-        intervalId = setInterval(poll, LIVE_INTERVAL);
-        (intervalId as any)._delay = LIVE_INTERVAL;
-      }
-    } else {
-      // Repasse en mode lent si pas de match
-      if ((intervalId as any)._delay !== IDLE_INTERVAL) {
-        clearInterval(intervalId);
-        intervalId = setInterval(poll, IDLE_INTERVAL);
-        (intervalId as any)._delay = IDLE_INTERVAL;
-      }
     }
   }
 
-  intervalId = setInterval(poll, IDLE_INTERVAL);
-  (intervalId as any)._delay = IDLE_INTERVAL;
+  const intervalId = setInterval(poll, LIVE_INTERVAL);
 
   // Refresh à minuit, midi et 23h05
   let midnightTimeout: ReturnType<typeof setTimeout>;
