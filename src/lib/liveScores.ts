@@ -270,15 +270,16 @@ function hasLiveOrImminent(): boolean {
   });
 }
 
-function msUntilMidnight(): number {
+function msUntilNext(hour: number): number {
   const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  return midnight.getTime() - now.getTime();
+  const next = new Date(now);
+  next.setHours(hour, 0, 0, 0);
+  if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+  return next.getTime() - now.getTime();
 }
 
-function dailyRefresh(apiKey: string): void {
-  // Mark past matches as finished and fetch updated scores
+export function dailyRefresh(apiKey: string): void {
+  // Mark past matches as finished then fetch updated scores
   const matches: Match[] = db.get<Match>('pf_matches');
   const now = Date.now();
   let changed = false;
@@ -295,41 +296,52 @@ function dailyRefresh(apiKey: string): void {
   if (changed) {
     db.set('pf_matches', updated);
     window.dispatchEvent(new Event('pf_matches_updated'));
-    console.log('[LiveScores] Refresh minuit — matchs passés marqués terminés');
+    console.log('[LiveScores] Refresh — matchs passés marqués terminés');
   }
   fetchAndUpdateScores(apiKey).catch(console.error);
 }
 
 export function startLiveScorePolling(apiKey: string): () => void {
-  const INTERVAL = 15 * 60 * 1000; // 15 minutes
+  const LIVE_INTERVAL = 10 * 60 * 1000; // 10 min pendant les matchs
 
   function poll() {
     if (hasLiveOrImminent()) {
-      console.log('[LiveScores] Match en cours ou imminent — mise à jour scores');
-    } else {
-      console.log('[LiveScores] Polling périodique — mise à jour scores');
+      console.log('[LiveScores] Match en cours — polling 10 min');
+      fetchAndUpdateScores(apiKey).catch(console.error);
     }
-    fetchAndUpdateScores(apiKey).catch(console.error);
   }
 
-  // Au démarrage : marquer les matchs passés comme terminés + appel API
+  // Au démarrage : mise à jour complète immédiate
   dailyRefresh(apiKey);
-  poll();
 
-  const intervalId = setInterval(poll, INTERVAL);
+  const intervalId = setInterval(poll, LIVE_INTERVAL);
 
-  // Refresh daily at midnight
+  // Refresh à minuit et à midi
   let midnightTimeout: ReturnType<typeof setTimeout>;
+  let noonTimeout: ReturnType<typeof setTimeout>;
+
   function scheduleMidnight() {
     midnightTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh minuit');
       dailyRefresh(apiKey);
-      scheduleMidnight(); // re-schedule for the next midnight
-    }, msUntilMidnight());
+      scheduleMidnight();
+    }, msUntilNext(0));
   }
+
+  function scheduleNoon() {
+    noonTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh midi');
+      dailyRefresh(apiKey);
+      scheduleNoon();
+    }, msUntilNext(12));
+  }
+
   scheduleMidnight();
+  scheduleNoon();
 
   return () => {
     clearInterval(intervalId);
     clearTimeout(midnightTimeout);
+    clearTimeout(noonTimeout);
   };
 }
