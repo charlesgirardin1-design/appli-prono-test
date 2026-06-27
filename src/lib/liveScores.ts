@@ -311,9 +311,6 @@ export function startLiveScorePolling(apiKey: string): () => void {
     }
   }
 
-  // Au démarrage : mise à jour complète immédiate
-  dailyRefresh(apiKey);
-
   const intervalId = setInterval(poll, LIVE_INTERVAL);
 
   // Refresh à minuit, midi et 23h05
