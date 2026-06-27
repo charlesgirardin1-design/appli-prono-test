@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSettings, saveSettings } from '../lib/settings';
 import { applyTheme } from '../lib/settings';
-import { fetchAndUpdateScores } from '../lib/liveScores';
-import { Settings, User, Moon, Sun, Trash2, CheckCircle, Copy, Wifi } from 'lucide-react';
+import { Settings, User, Moon, Sun, Trash2, CheckCircle, Copy } from 'lucide-react';
 
 export default function ParametresPage() {
   const [pseudo, setPseudo] = useState('');
@@ -10,18 +9,12 @@ export default function ParametresPage() {
   const [playerId, setPlayerId] = useState('');
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeySaved, setApiKeySaved] = useState(false);
-  const [apiTesting, setApiTesting] = useState(false);
-  const [apiTestResult, setApiTestResult] = useState<'success' | 'error' | null>(null);
-  const [apiTestMsg, setApiTestMsg] = useState('');
 
   useEffect(() => {
     const s = getSettings();
     setPseudo(s.pseudo);
     setTheme(s.theme);
     setPlayerId(s.playerId);
-    setApiKey(localStorage.getItem('pf_football_api_key') || '');
   }, []);
 
   function handleSave(e: React.FormEvent) {
@@ -52,40 +45,6 @@ export default function ParametresPage() {
     localStorage.setItem('pf_pronos', JSON.stringify(filtered));
     localStorage.removeItem('pf_favoris');
     window.location.reload();
-  }
-
-  function saveApiKey() {
-    localStorage.setItem('pf_football_api_key', apiKey.trim());
-    setApiKeySaved(true);
-    setTimeout(() => setApiKeySaved(false), 2000);
-  }
-
-  async function testApiKey() {
-    if (!apiKey.trim()) return;
-    setApiTesting(true);
-    setApiTestResult(null);
-    setApiTestMsg('');
-    try {
-      const resp = await fetch('/api/scores');
-      if (!resp.ok) {
-        setApiTestResult('error');
-        setApiTestMsg(`Erreur proxy ${resp.status} : ${resp.statusText}`);
-      } else {
-        const data = await resp.json();
-        const count = (data.matches || []).length;
-        const finished = (data.matches || []).filter((m: any) => m.status === 'FINISHED').length;
-        const live = (data.matches || []).filter((m: any) => m.status === 'IN_PLAY' || m.status === 'PAUSED').length;
-        setApiTestResult('success');
-        setApiTestMsg(`${count} matchs (${finished} terminés, ${live} en cours)`);
-        await fetchAndUpdateScores(apiKey.trim());
-      }
-    } catch (e: any) {
-      setApiTestResult('error');
-      setApiTestMsg(e.message || 'Erreur réseau');
-    } finally {
-      setApiTesting(false);
-      setTimeout(() => { setApiTestResult(null); setApiTestMsg(''); }, 8000);
-    }
   }
 
   function resetAll() {
@@ -140,38 +99,6 @@ export default function ParametresPage() {
             <span className="toggle-thumb" />
           </button>
         </div>
-      </div>
-
-      {/* Scores en direct */}
-      <div className="card settings-section">
-        <h2 className="settings-title"><Wifi size={18} /> Scores en direct</h2>
-        <p className="settings-hint">Entrez votre clé API <a href="https://www.football-data.org" target="_blank" rel="noopener noreferrer">football-data.org</a> pour activer la mise à jour automatique des scores (toutes les 60 secondes).</p>
-        <label className="settings-label">Clé API scores en direct</label>
-        <div className="form-row">
-          <input
-            type="password"
-            className="input"
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
-            placeholder="Votre clé football-data.org"
-          />
-          <button type="button" className="btn-primary" onClick={saveApiKey}>
-            {apiKeySaved ? <><CheckCircle size={14} /> Sauvegardé</> : 'Enregistrer'}
-          </button>
-          <button type="button" className="btn-secondary" onClick={testApiKey} disabled={apiTesting || !apiKey.trim()}>
-            {apiTesting ? 'Test...' : 'Tester'}
-          </button>
-        </div>
-        {apiTestResult === 'success' && (
-          <p style={{ color: 'var(--green)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-            <CheckCircle size={14} style={{ verticalAlign: 'middle' }} /> {apiTestMsg || 'Connexion réussie !'}
-          </p>
-        )}
-        {apiTestResult === 'error' && (
-          <p style={{ color: 'var(--red, #ef4444)', marginTop: '0.5rem', fontSize: '0.875rem' }}>
-            ⚠️ {apiTestMsg || 'Erreur de connexion. Vérifiez votre clé API.'}
-          </p>
-        )}
       </div>
 
       {/* Données */}

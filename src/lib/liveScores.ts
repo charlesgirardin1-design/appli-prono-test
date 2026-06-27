@@ -158,26 +158,34 @@ function findMatchingLocalMatch(
   });
 }
 
-async function fetchMatches(_apiKey: string, statusFilter?: string): Promise<ApiMatch[]> {
-  // Use our serverless proxy to avoid CORS issues
-  const params = new URLSearchParams();
-  if (statusFilter) params.set('status', statusFilter);
-  const qs = params.toString() ? `?${params}` : '';
-  const url = `/api/scores${qs}`;
-
+async function fetchEndpoint(endpoint: string): Promise<ApiMatch[]> {
+  const url = `/api/scores?endpoint=${endpoint}`;
   try {
     const resp = await fetch(url);
     if (!resp.ok) {
-      console.warn('[LiveScores] Proxy HTTP', resp.status, url);
+      console.warn('[LiveScores] Proxy HTTP', resp.status, endpoint);
       return [];
     }
-    const data: ApiResponse = await resp.json();
-    const matches = data.matches || [];
-    console.log('[LiveScores] Fetched', matches.length, 'matches via proxy', statusFilter || '(all)');
+    const data = await resp.json();
+    // Support multiple response shapes from different APIs
+    const matches: any[] = data.matches || data.events || data.data || [];
+    console.log('[LiveScores]', endpoint, '→', matches.length, 'matchs');
     return matches;
   } catch (e) {
-    console.error('[LiveScores] Fetch error:', e);
+    console.error('[LiveScores] Fetch error', endpoint, e);
     return [];
+  }
+}
+
+// Lit les scores mis à jour par le cron Vercel depuis Firestore
+async function fetchCronScores(): Promise<Record<string, { homeScore: number; awayScore: number; status: string }>> {
+  try {
+    const resp = await fetch('/api/match-scores');
+    if (!resp.ok) return {};
+    const data = await resp.json();
+    return data.scores || {};
+  } catch {
+    return {};
   }
 }
 
@@ -187,27 +195,35 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   const localMatches: Match[] = db.get<Match>('pf_matches');
   if (!localMatches.length) return;
 
-  // Fetch all matches first (contains live + finished + upcoming with current scores)
-  // Then fetch live separately to get the freshest data (avoid rate limiting with sequential calls)
-  const allMatches = await fetchMatches(apiKey);
-  let liveMatches: ApiMatch[] = [];
-  let finishedMatches: ApiMatch[] = [];
-  try {
-    liveMatches = await fetchMatches(apiKey, 'LIVE');
-  } catch (e) {
-    console.warn('[LiveScores] Could not fetch live matches separately:', e);
-  }
-  try {
-    finishedMatches = await fetchMatches(apiKey, 'FINISHED');
-  } catch (e) {
-    console.warn('[LiveScores] Could not fetch finished matches separately:', e);
+  // 1. Essaie d'abord les scores du cron Vercel (Firestore)
+  const cronScores = await fetchCronScores();
+  if (Object.keys(cronScores).length > 0) {
+    console.log('[LiveScores] Scores cron Firestore:', Object.keys(cronScores).length, 'matchs');
+    let updated = false;
+    const updatedMatches = localMatches.map(local => {
+      const key = `${local.homeTeam.name}__${local.awayTeam.name}`;
+      const score = cronScores[key];
+      if (!score || score.homeScore < 0) return local;
+      const newStatus = score.status as Match['status'];
+      if (local.status === newStatus && local.homeScore === score.homeScore && local.awayScore === score.awayScore) return local;
+      updated = true;
+      return { ...local, status: newStatus, homeScore: score.homeScore, awayScore: score.awayScore };
+    });
+    if (updated) {
+      db.set('pf_matches', updatedMatches);
+      window.dispatchEvent(new Event('pf_matches_updated'));
+    }
   }
 
-  // Merge: live > finished > all
+  // 2. Fallback direct API si le cron n'a pas de données
+  const todayMatches = await fetchEndpoint('today');
+  const wcMatches = await fetchEndpoint('worldcup');
+  const liveMatches = await fetchEndpoint('live');
+
   const matchesById = new Map<number, ApiMatch>();
-  for (const m of allMatches) matchesById.set(m.id, m);
-  for (const m of finishedMatches) matchesById.set(m.id, m);
-  for (const m of liveMatches) matchesById.set(m.id, m); // override with live data
+  for (const m of wcMatches) matchesById.set(m.id, m);
+  for (const m of todayMatches) matchesById.set(m.id, m);
+  for (const m of liveMatches) matchesById.set(m.id, m);
 
   const apiMatchList = Array.from(matchesById.values());
   const liveFromApi = apiMatchList.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
@@ -270,10 +286,10 @@ function hasLiveOrImminent(): boolean {
   });
 }
 
-function msUntilNext(hour: number): number {
+function msUntilNext(hour: number, minute: number = 0): number {
   const now = new Date();
   const next = new Date(now);
-  next.setHours(hour, 0, 0, 0);
+  next.setHours(hour, minute, 0, 0);
   if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
   return next.getTime() - now.getTime();
 }
@@ -306,19 +322,16 @@ export function startLiveScorePolling(apiKey: string): () => void {
 
   function poll() {
     if (hasLiveOrImminent()) {
-      console.log('[LiveScores] Match en cours — polling 10 min');
       fetchAndUpdateScores(apiKey).catch(console.error);
     }
   }
 
-  // Au démarrage : mise à jour complète immédiate
-  dailyRefresh(apiKey);
-
   const intervalId = setInterval(poll, LIVE_INTERVAL);
 
-  // Refresh à minuit et à midi
+  // Refresh à minuit, midi et 23h05
   let midnightTimeout: ReturnType<typeof setTimeout>;
   let noonTimeout: ReturnType<typeof setTimeout>;
+  let eveningTimeout: ReturnType<typeof setTimeout>;
 
   function scheduleMidnight() {
     midnightTimeout = setTimeout(() => {
@@ -336,12 +349,22 @@ export function startLiveScorePolling(apiKey: string): () => void {
     }, msUntilNext(12));
   }
 
+  function scheduleEvening() {
+    eveningTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh 23h05');
+      dailyRefresh(apiKey);
+      scheduleEvening();
+    }, msUntilNext(23, 5));
+  }
+
   scheduleMidnight();
   scheduleNoon();
+  scheduleEvening();
 
   return () => {
     clearInterval(intervalId);
     clearTimeout(midnightTimeout);
     clearTimeout(noonTimeout);
+    clearTimeout(eveningTimeout);
   };
 }
