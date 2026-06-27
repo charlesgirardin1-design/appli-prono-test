@@ -52,62 +52,22 @@ export default function TestPage() {
 
   async function diagnoseApi() {
     setLoading(true);
-    addLog('=== DIAGNOSTIC API (via proxy /api/scores) ===');
+    addLog('=== SONDAGE API RapidAPI (free-api-live-football-data) ===');
 
-    try {
-      const r1 = await fetch('/api/scores');
-      addLog(`HTTP proxy : ${r1.status} ${r1.statusText}`);
-      if (r1.ok) {
-        const d1 = await r1.json();
-        const matches = d1.matches || [];
-        const finished = matches.filter((m: any) => m.status === 'FINISHED');
-        const live = matches.filter((m: any) => m.status === 'IN_PLAY' || m.status === 'PAUSED');
-        addLog(`→ ${matches.length} matchs (${finished.length} terminés, ${live.length} en cours)`, 'green');
-
-        // Show all finished with scores
-        if (finished.length > 0) {
-          addLog('--- Matchs terminés (noms API bruts) ---');
-          finished.forEach((m: any) => {
-            addLog(`  API: "${m.homeTeam.name}" ${m.score.fullTime.home ?? '?'}-${m.score.fullTime.away ?? '?'} "${m.awayTeam.name}"`);
-          });
-        }
-        if (live.length > 0) {
-          addLog('--- Matchs en cours ---');
-          live.forEach((m: any) => {
-            addLog(`  LIVE: "${m.homeTeam.name}" ${m.score.fullTime.home ?? '?'}-${m.score.fullTime.away ?? '?'} "${m.awayTeam.name}"`, 'green');
-          });
-        }
-
-        // Check matching against local (avec traduction)
-        const localMatches: Match[] = db.get<Match>('pf_matches');
-        addLog('--- Correspondance API ↔ Local (avec traduction) ---');
-        let matched = 0, unmatched = 0;
-        finished.forEach((api: any) => {
-          const frHome = toFrench(api.homeTeam.name);
-          const frAway = toFrench(api.awayTeam.name);
-          const normApiHome = normalizeForComparison(frHome);
-          const normApiAway = normalizeForComparison(frAway);
-          const found = localMatches.find(l =>
-            normalizeForComparison(l.homeTeam.name) === normApiHome &&
-            normalizeForComparison(l.awayTeam.name) === normApiAway
-          );
-          if (found) {
-            matched++;
-          } else {
-            unmatched++;
-            addLog(`  ❌ "${api.homeTeam.name}"→"${frHome}" / "${api.awayTeam.name}"→"${frAway}" non trouvé`, 'red');
-          }
-        });
-        addLog(`Matchés : ${matched}/${finished.length} terminés`, matched === finished.length ? 'green' : 'red');
-      } else {
-        const text = await r1.text();
-        addLog(`Erreur : ${text.slice(0, 200)}`, 'red');
+    const endpoints = ['live', 'worldcup', 'finished'];
+    for (const ep of endpoints) {
+      try {
+        addLog(`Test endpoint: ${ep}...`);
+        const r = await fetch(`/api/scores?endpoint=${ep}`);
+        addLog(`  HTTP ${r.status}`);
+        const data = await r.json();
+        addLog(`  Réponse brute: ${JSON.stringify(data).slice(0, 300)}`);
+      } catch (e: any) {
+        addLog(`  Erreur: ${e.message}`, 'red');
       }
-    } catch (e: any) {
-      addLog(`Erreur réseau : ${e.message}`, 'red');
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   }
 
   async function forceUpdate() {

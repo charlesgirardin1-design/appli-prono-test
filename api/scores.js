@@ -1,3 +1,6 @@
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY || 'a06afba82222d7ea1b53b7c8de57b4b2bd9ee31eae7fa766d9cebc57bbc8c20a';
+const RAPIDAPI_HOST = 'free-api-live-football-data.p.rapidapi.com';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -7,20 +10,32 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const { status } = req.query;
-  const apiKey = process.env.FOOTBALL_DATA_API_KEY || 'e17c642125d94af9bf0b31676463b862';
+  const { endpoint = 'live' } = req.query;
 
-  const params = new URLSearchParams();
-  if (status) params.set('status', status);
-  const qs = params.toString() ? `?${params}` : '';
+  // Endpoints possibles de l'API
+  const ENDPOINTS = {
+    live: '/getliveevents',
+    worldcup: '/getmatchbyworldcup',
+    finished: '/getmatchesbycompetition?competition_id=FIFA_WC&status=FINISHED',
+  };
+
+  const path = ENDPOINTS[endpoint] || ENDPOINTS.live;
 
   try {
     const response = await fetch(
-      `https://api.football-data.org/v4/competitions/WC/matches${qs}`,
-      { headers: { 'X-Auth-Token': apiKey } }
+      `https://${RAPIDAPI_HOST}${path}`,
+      {
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': RAPIDAPI_HOST,
+        },
+      }
     );
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
     res.status(response.status).json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
