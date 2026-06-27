@@ -270,10 +270,10 @@ function hasLiveOrImminent(): boolean {
   });
 }
 
-function msUntilNext(hour: number): number {
+function msUntilNext(hour: number, minute: number = 0): number {
   const now = new Date();
   const next = new Date(now);
-  next.setHours(hour, 0, 0, 0);
+  next.setHours(hour, minute, 0, 0);
   if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
   return next.getTime() - now.getTime();
 }
@@ -316,9 +316,10 @@ export function startLiveScorePolling(apiKey: string): () => void {
 
   const intervalId = setInterval(poll, LIVE_INTERVAL);
 
-  // Refresh à minuit et à midi
+  // Refresh à minuit, midi et 23h05
   let midnightTimeout: ReturnType<typeof setTimeout>;
   let noonTimeout: ReturnType<typeof setTimeout>;
+  let eveningTimeout: ReturnType<typeof setTimeout>;
 
   function scheduleMidnight() {
     midnightTimeout = setTimeout(() => {
@@ -336,12 +337,22 @@ export function startLiveScorePolling(apiKey: string): () => void {
     }, msUntilNext(12));
   }
 
+  function scheduleEvening() {
+    eveningTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh 23h05');
+      dailyRefresh(apiKey);
+      scheduleEvening();
+    }, msUntilNext(23, 5));
+  }
+
   scheduleMidnight();
   scheduleNoon();
+  scheduleEvening();
 
   return () => {
     clearInterval(intervalId);
     clearTimeout(midnightTimeout);
     clearTimeout(noonTimeout);
+    clearTimeout(eveningTimeout);
   };
 }
