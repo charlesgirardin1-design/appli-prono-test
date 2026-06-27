@@ -16,6 +16,7 @@ export default function Navbar() {
     { to: '/groupes', label: 'Groupes', icon: Users },
     { to: '/parametres', label: 'Paramètres', icon: Settings },
     { to: '/test', label: 'Test', icon: FlaskConical },
+    { to: '/retuyrraz', label: 'Retuyrraz', icon: Menu },
   ];
 
   async function handleLogout() {

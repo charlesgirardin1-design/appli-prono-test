@@ -12,6 +12,7 @@ import Groupes from './pages/Groupes';
 import Favoris from './pages/Favoris';
 import ParametresPage from './pages/Parametres';
 import TestPage from './pages/Test';
+import RetuyrrazPage from './pages/Retuyrraz';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import './App.css';
@@ -80,6 +81,7 @@ function AppRoutes() {
           <Route path="/favoris" element={<PrivateRoute><Favoris /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><ParametresPage /></PrivateRoute>} />
           <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
+          <Route path="/retuyrraz" element={<PrivateRoute><RetuyrrazPage /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
