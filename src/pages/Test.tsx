@@ -7,37 +7,6 @@ import { fetchAndUpdateScores } from '../lib/liveScores';
 
 const API_KEY = 'e17c642125d94af9bf0b31676463b862';
 
-// Même mapping que liveScores.ts pour la traduction
-const TEAM_NAME_MAP: Record<string, string> = {
-  'United States': 'États-Unis', 'USA': 'États-Unis', 'Mexico': 'Mexique',
-  'Canada': 'Canada', 'Argentina': 'Argentine', 'Chile': 'Chili', 'Peru': 'Pérou',
-  'Australia': 'Australie', 'Brazil': 'Brésil', 'Colombia': 'Colombie', 'Uruguay': 'Uruguay',
-  'Paraguay': 'Paraguay', 'France': 'France', 'England': 'Angleterre', 'Germany': 'Allemagne',
-  'Portugal': 'Portugal', 'Spain': 'Espagne', 'Italy': 'Italie', 'Netherlands': 'Pays-Bas',
-  'Holland': 'Pays-Bas', 'Croatia': 'Croatie', 'Morocco': 'Maroc', 'Senegal': 'Sénégal',
-  'South Africa': 'Afrique du Sud', 'Cameroon': 'Cameroun', 'Japan': 'Japon',
-  'South Korea': 'Corée du Sud', 'Korea Republic': 'Corée du Sud', 'Saudi Arabia': 'Arabie Saoudite',
-  'Iran': 'Iran', 'Belgium': 'Belgique', 'Denmark': 'Danemark', 'Austria': 'Autriche',
-  'Switzerland': 'Suisse', 'Ecuador': 'Équateur', 'Venezuela': 'Venezuela', 'Bolivia': 'Bolivie',
-  'Costa Rica': 'Costa Rica', 'Egypt': 'Égypte', 'Nigeria': 'Nigéria', 'Algeria': 'Algérie',
-  'Ivory Coast': "Côte d'Ivoire", "Côte d'Ivoire": "Côte d'Ivoire", 'Poland': 'Pologne',
-  'Ukraine': 'Ukraine', 'Romania': 'Roumanie', 'Turkey': 'Türkiye', 'Türkiye': 'Türkiye',
-  'New Zealand': 'Nouvelle-Zélande', 'Indonesia': 'Indonésie', 'Qatar': 'Qatar', 'Panama': 'Panama',
-  'Czech Republic': 'Tchéquie', 'Czechia': 'Tchéquie', 'Bosnia and Herzegovina': 'Bosnie-Herzégovine',
-  'Bosnia & Herzegovina': 'Bosnie-Herzégovine', 'Scotland': 'Écosse', 'Ghana': 'Ghana',
-  'Tunisia': 'Tunisie', 'Curaçao': 'Curaçao', 'Cabo Verde': 'Cabo Verde', 'Cape Verde': 'Cabo Verde',
-  'Iraq': 'Irak', 'Uzbekistan': 'Ouzbékistan', 'Jordan': 'Jordanie', 'Congo DR': 'Congo DR',
-  'DR Congo': 'Congo DR', 'Norway': 'Norvège', 'Sweden': 'Suède', 'Haiti': 'Haïti',
-};
-
-function toFrench(name: string): string {
-  return TEAM_NAME_MAP[name] || name;
-}
-
-function normalizeForComparison(name: string): string {
-  return name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
-}
-
 export default function TestPage() {
   const [log, setLog] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,7 +69,6 @@ export default function TestPage() {
   function checkLocal() {
     const matches: Match[] = db.get<Match>('pf_matches');
     addLog(`=== DONNÉES LOCALES (${matches.length} matchs) ===`);
-    const now = Date.now();
     matches.forEach(m => {
       const eff = getEffectiveStatus(m);
       if (eff === 'live' || eff === 'finished') {
