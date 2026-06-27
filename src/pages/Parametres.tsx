@@ -59,7 +59,6 @@ export default function ParametresPage() {
         <h1><Settings size={24} /> Paramètres</h1>
       </div>
 
-      {/* Profil */}
       <div className="card settings-section">
         <h2 className="settings-title"><User size={18} /> Profil</h2>
         <form onSubmit={handleSave} className="settings-form">
@@ -90,7 +89,6 @@ export default function ParametresPage() {
         </div>
       </div>
 
-      {/* Apparence */}
       <div className="card settings-section">
         <h2 className="settings-title">{theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />} Apparence</h2>
         <div className="theme-toggle-row">
@@ -101,7 +99,6 @@ export default function ParametresPage() {
         </div>
       </div>
 
-      {/* Données */}
       <div className="card settings-section danger-zone">
         <h2 className="settings-title"><Trash2 size={18} /> Données</h2>
         <div className="danger-actions">
@@ -122,7 +119,6 @@ export default function ParametresPage() {
         </div>
       </div>
 
-      {/* Info */}
       <div className="card settings-section app-info">
         <p>PronoFoot — Coupe du Monde 2026</p>
         <p className="version">v1.0.0</p>
