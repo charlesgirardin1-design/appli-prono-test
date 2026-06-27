@@ -270,6 +270,36 @@ function hasLiveOrImminent(): boolean {
   });
 }
 
+function msUntilMidnight(): number {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return midnight.getTime() - now.getTime();
+}
+
+function dailyRefresh(apiKey: string): void {
+  // Mark past matches as finished and fetch updated scores
+  const matches: Match[] = db.get<Match>('pf_matches');
+  const now = Date.now();
+  let changed = false;
+  const updated = matches.map(m => {
+    if (m.status === 'upcoming') {
+      const end = new Date(m.date).getTime() + 3 * 60 * 60 * 1000;
+      if (now > end) {
+        changed = true;
+        return { ...m, status: 'finished' as const };
+      }
+    }
+    return m;
+  });
+  if (changed) {
+    db.set('pf_matches', updated);
+    window.dispatchEvent(new Event('pf_matches_updated'));
+    console.log('[LiveScores] Refresh minuit — matchs passés marqués terminés');
+  }
+  fetchAndUpdateScores(apiKey).catch(console.error);
+}
+
 export function startLiveScorePolling(apiKey: string): () => void {
   const INTERVAL = 15 * 60 * 1000; // 15 minutes
 
@@ -282,9 +312,22 @@ export function startLiveScorePolling(apiKey: string): () => void {
     }
   }
 
-  // Fetch immédiatement au démarrage
   poll();
 
   const intervalId = setInterval(poll, INTERVAL);
-  return () => clearInterval(intervalId);
+
+  // Refresh daily at midnight
+  let midnightTimeout: ReturnType<typeof setTimeout>;
+  function scheduleMidnight() {
+    midnightTimeout = setTimeout(() => {
+      dailyRefresh(apiKey);
+      scheduleMidnight(); // re-schedule for the next midnight
+    }, msUntilMidnight());
+  }
+  scheduleMidnight();
+
+  return () => {
+    clearInterval(intervalId);
+    clearTimeout(midnightTimeout);
+  };
 }

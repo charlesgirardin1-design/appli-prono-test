@@ -106,7 +106,10 @@ export default function MatchCard({ match }: Props) {
         {/* FACE AVANT */}
         <div className="card-front">
           <div className="match-meta">
-            <span className="competition">{match.competition}</span>
+            <div className="match-meta-left">
+              <span className="competition">{match.competition}</span>
+              {match.phase && <span className="phase-badge">{match.phase}</span>}
+            </div>
             <div className="match-meta-right">
               {effectiveStatus === 'upcoming' && (
                 <span className="match-localtime">
