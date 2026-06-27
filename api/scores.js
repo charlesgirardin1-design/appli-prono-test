@@ -3,7 +3,7 @@ const RAPIDAPI_HOST = 'free-api-live-football-data.p.rapidapi.com';
 // Clés API en cascade — la 2ème prend le relais si la 1ère est épuisée (429)
 const API_KEYS = [
   process.env.RAPIDAPI_KEY_1 || 'd6127f5d75mshc4858b179f6cf52p1c2fcdjsn08180b117e2b',
-  process.env.RAPIDAPI_KEY_2 || '', // ajoute ta 2ème clé ici ou dans Vercel env vars
+  process.env.RAPIDAPI_KEY_2 || 'f266a6995amshe3ad47e5948fa7ap17ab2bjsnb808729eb291',
 ].filter(Boolean);
 
 async function fetchWithFallback(path) {
