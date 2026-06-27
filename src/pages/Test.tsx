@@ -23,7 +23,7 @@ export default function TestPage() {
     setLoading(true);
     addLog('=== SONDAGE API RapidAPI (free-api-live-football-data) ===');
 
-    const endpoints = ['live', 'worldcup', 'finished'];
+    const endpoints = ['competitions', 'live', 'today', 'worldcup', 'worldcup2', 'worldcup3', 'finished'];
     for (const ep of endpoints) {
       try {
         addLog(`Test endpoint: ${ep}...`);
