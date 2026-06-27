@@ -306,12 +306,14 @@ export function startLiveScorePolling(apiKey: string): () => void {
   function poll() {
     if (hasLiveOrImminent()) {
       console.log('[LiveScores] Match en cours ou imminent — mise à jour scores');
-      fetchAndUpdateScores(apiKey).catch(console.error);
     } else {
-      console.log('[LiveScores] Aucun match en cours — polling suspendu');
+      console.log('[LiveScores] Polling périodique — mise à jour scores');
     }
+    fetchAndUpdateScores(apiKey).catch(console.error);
   }
 
+  // Au démarrage : marquer les matchs passés comme terminés + appel API
+  dailyRefresh(apiKey);
   poll();
 
   const intervalId = setInterval(poll, INTERVAL);
