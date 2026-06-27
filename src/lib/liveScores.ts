@@ -260,15 +260,31 @@ export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
   }
 }
 
+function hasLiveOrImminent(): boolean {
+  const matches: Match[] = db.get<Match>('pf_matches');
+  const now = Date.now();
+  return matches.some(m => {
+    const t = new Date(m.date).getTime();
+    // Match en cours ou qui commence dans les 30 prochaines minutes
+    return now >= t - 30 * 60 * 1000 && now <= t + 3 * 60 * 60 * 1000;
+  });
+}
+
 export function startLiveScorePolling(apiKey: string): () => void {
-  if (!apiKey) return () => {};
+  const INTERVAL = 15 * 60 * 1000; // 15 minutes
 
-  // Fetch immediately on start
-  fetchAndUpdateScores(apiKey).catch(console.error);
+  function poll() {
+    if (hasLiveOrImminent()) {
+      console.log('[LiveScores] Match en cours ou imminent — mise à jour scores');
+      fetchAndUpdateScores(apiKey).catch(console.error);
+    } else {
+      console.log('[LiveScores] Aucun match en cours — polling suspendu');
+    }
+  }
 
-  const intervalId = setInterval(() => {
-    fetchAndUpdateScores(apiKey).catch(console.error);
-  }, 60_000);
+  // Fetch immédiatement au démarrage
+  poll();
 
+  const intervalId = setInterval(poll, INTERVAL);
   return () => clearInterval(intervalId);
 }
