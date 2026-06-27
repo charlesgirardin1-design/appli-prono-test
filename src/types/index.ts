@@ -22,6 +22,7 @@ export interface Match {
   awayTeam: Team;
   date: string; // ISO string
   competition: string;
+  phase: string; // 'Phase de groupes' | 'Huitièmes de finale' | 'Quarts de finale' | 'Demi-finale' | 'Finale'
   status: 'upcoming' | 'live' | 'finished';
   homeScore?: number;
   awayScore?: number;

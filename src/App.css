@@ -1232,6 +1232,19 @@ body {
   flex-wrap: wrap;
   gap: 4px;
 }
+.match-meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.phase-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  opacity: 0.85;
+}
 .match-meta-right {
   display: flex;
   align-items: center;
