@@ -29,6 +29,7 @@ export default function Home() {
   const [filter, setFilter] = useState<'upcoming' | 'live' | 'finished' | 'all'>('upcoming');
   const [filterPhase, setFilterPhase] = useState<string>('');
   const [filterTeam, setFilterTeam] = useState<string>('');
+  const [teams, setTeams] = useState<string[]>([]);
   const streak = useStreak();
 
   const loadData = () => {
@@ -49,24 +50,12 @@ export default function Home() {
     };
   }, []);
 
-  // Equipes uniques triées alphabétiquement
-  const allTeams = Array.from(new Set(
-    matches.flatMap(m => [m.homeTeam.name, m.awayTeam.name])
-  )).sort();
-
-  const filtered = matches
-    .filter(m => {
-      if (filter !== 'all' && getEffectiveStatus(m) !== filter) return false;
-      if (filterPhase && m.phase !== filterPhase) return false;
-      if (filterTeam && m.homeTeam.name !== filterTeam && m.awayTeam.name !== filterTeam) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      const da = new Date(a.date).getTime();
-      const db = new Date(b.date).getTime();
-      if (filter === 'finished') return db - da;
-      return da - db;
-    });
+  // Équipes uniques, triées alphabétiquement
+  useEffect(() => {
+    const seen = new Set<string>();
+    matches.forEach(m => { seen.add(m.homeTeam.name); seen.add(m.awayTeam.name); });
+    setTeams(Array.from(seen).sort((a, b) => a.localeCompare(b)));
+  }, [matches]);
 
   const upcomingCount = matches.filter(m => getEffectiveStatus(m) === 'upcoming').length;
   const liveCount = matches.filter(m => getEffectiveStatus(m) === 'live').length;
@@ -75,7 +64,20 @@ export default function Home() {
   ).length;
   const progressPct = upcomingCount > 0 ? Math.round((pronosCount / upcomingCount) * 100) : 0;
 
-  const hasActiveSubFilter = filterPhase !== '' || filterTeam !== '';
+  let filtered = matches.filter(m => {
+    const status = getEffectiveStatus(m);
+    if (filter !== 'all' && status !== filter) return false;
+    if (filterPhase && m.phase !== filterPhase) return false;
+    if (filterTeam && m.homeTeam.name !== filterTeam && m.awayTeam.name !== filterTeam) return false;
+    return true;
+  });
+
+  // Trier les matchs terminés du plus récent au plus ancien
+  if (filter === 'finished') {
+    filtered = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  const hasSubFilters = filterPhase || filterTeam;
 
   return (
     <div className="page">
@@ -98,22 +100,16 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Filtres phase + pays */}
+      {/* Sous-filtres phase + équipe */}
       <div className="sub-filters">
         <div className="phase-filters">
-          <button
-            className={`phase-btn ${filterPhase === '' ? 'active' : ''}`}
-            onClick={() => setFilterPhase('')}
-          >
-            Toutes
-          </button>
-          {PHASES.map(p => (
+          {PHASES.map(ph => (
             <button
-              key={p}
-              className={`phase-btn ${filterPhase === p ? 'active' : ''}`}
-              onClick={() => setFilterPhase(filterPhase === p ? '' : p)}
+              key={ph}
+              className={`phase-btn ${filterPhase === ph ? 'active' : ''}`}
+              onClick={() => setFilterPhase(prev => prev === ph ? '' : ph)}
             >
-              {PHASE_LABELS[p]}
+              {PHASE_LABELS[ph]}
             </button>
           ))}
         </div>
@@ -122,14 +118,12 @@ export default function Home() {
           value={filterTeam}
           onChange={e => setFilterTeam(e.target.value)}
         >
-          <option value="">Tous les pays</option>
-          {allTeams.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
+          <option value="">Toutes équipes</option>
+          {teams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
-        {hasActiveSubFilter && (
+        {hasSubFilters && (
           <button className="clear-filters-btn" onClick={() => { setFilterPhase(''); setFilterTeam(''); }}>
-            Réinitialiser
+            ✕ Effacer
           </button>
         )}
       </div>
