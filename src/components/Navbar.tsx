@@ -20,11 +20,11 @@ export default function Navbar() {
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
     { to: '/parametres', label: 'Paramètres', icon: Settings },
-    { to: '/test', label: 'Test', icon: FlaskConical },
     { to: '/retuyrraz', label: 'Retuyrraz', icon: Menu },
   ];
 
   if (adminUser) {
+    links.push({ to: '/test', label: 'Test', icon: FlaskConical });
     links.push({ to: '/admin', label: 'Admin', icon: Shield });
   }
 
