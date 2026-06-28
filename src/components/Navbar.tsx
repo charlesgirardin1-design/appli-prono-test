@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical } from 'lucide-react';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdmin } from '../lib/auth';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
+const adminUser = isAdmin(currentUser?.uid);
   const [open, setOpen] = React.useState(false);
 
   const links = [
@@ -36,7 +38,7 @@ export default function Navbar() {
       </button>
 
       <div className={`navbar-links ${open ? 'open' : ''}`}>
-        {links.map(({ to, label, icon: Icon }) => (
+        {[...links, ...adminLinks].map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
