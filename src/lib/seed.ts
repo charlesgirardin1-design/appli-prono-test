@@ -2,8 +2,9 @@ import { db } from './storage';
 import { Match } from '../types';
 import { WORLD_CUP_2026_MATCHES } from '../data/worldCup2026';
 import { recomputeAllPoints } from './firestore';
+import { fetchAndApplyOdds } from './odds';
 
-const SEED_VERSION = 'v8'; // incrémenter pour forcer un re-seed
+const SEED_VERSION = 'v8';
 
 export function seedMatchesIfNeeded(): void {
   const seeded = localStorage.getItem('pf_seeded');
@@ -16,5 +17,17 @@ export function seedMatchesIfNeeded(): void {
 
   db.set('pf_matches', matches);
   localStorage.setItem('pf_seeded', SEED_VERSION);
-    recomputeAllPoints();
+  recomputeAllPoints();
+}
+
+// Mise a jour des cotes depuis l'API (appele au demarrage)
+export async function refreshOdds(): Promise<void> {
+  try {
+    const matches: Match[] = db.get('pf_matches');
+    if (!matches.length) return;
+    const updated = await fetchAndApplyOdds(matches);
+    db.set('pf_matches', updated);
+  } catch {
+    // Silencieux si l'API est indisponible
+  }
 }
