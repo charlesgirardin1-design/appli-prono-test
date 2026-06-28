@@ -89,7 +89,7 @@ function AppRoutes() {
           <Route path="/groupes" element={<PrivateRoute><Groupes /></PrivateRoute>} />
           <Route path="/favoris" element={<PrivateRoute><Favoris /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><ParametresPage /></PrivateRoute>} />
-          <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
+          <Route path="/test" element={<AdminRoute><TestPage /></AdminRoute>} />
           <Route path="/retuyrraz" element={<PrivateRoute><RetuyrrazPage /></PrivateRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
