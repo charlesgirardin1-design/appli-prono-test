@@ -24,7 +24,7 @@ export default function ChampionPage() {
     getMatches().then((matches: Match[]) => {
       const seen = new Set<string>();
       matches.forEach(m => { seen.add(m.homeTeam.name); seen.add(m.awayTeam.name); });
-      setTeams([...seen].sort((a, b) => a.localeCompare(b)));
+            setTeams(Array.from(seen).sort((a, b) => a.localeCompare(b)));
     });
 
     const pid = getPlayerId();
