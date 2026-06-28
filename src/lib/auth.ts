@@ -120,11 +120,24 @@ export function getAllUsers(): StoredUser[] {
 }
 
 // ---- ADMIN ----
+// Verifier contre le playerId des settings (affiché dans les paramètres du compte)
+// et aussi contre le uid auth pour compatibilité
 
 export function isAdmin(uid?: string): boolean {
-  const id = uid ?? getCurrentUser()?.uid;
-  if (!id) return false;
-  return ADMIN_UIDS.includes(id);
+  // Vérifier le playerId (settings) en priorité
+  try {
+    const raw = localStorage.getItem('pf_settings');
+    if (raw) {
+      const settings = JSON.parse(raw);
+      if (settings.playerId && ADMIN_UIDS.includes(settings.playerId)) return true;
+    }
+  } catch {}
+  // Vérifier aussi le uid auth passé en paramètre
+  if (uid && ADMIN_UIDS.includes(uid)) return true;
+  // Vérifier le uid du user connecté
+  const authUid = getCurrentUser()?.uid;
+  if (authUid && ADMIN_UIDS.includes(authUid)) return true;
+  return false;
 }
 
 export function banUser(targetUid: string): void {
