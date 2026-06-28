@@ -67,40 +67,41 @@ export async function saveProno(
 }
 
 // ---- CALCUL DES POINTS ----
-// Bon prono (bonne tendance) : points de classement foot (victoire = 3, nul = 1)
-function calcTrendPoints(
-  pronoHome: number, pronoAway: number,
-  realHome: number, realAway: number
-): number {
-  const pronoTrend = Math.sign(pronoHome - pronoAway);
-  const realTrend = Math.sign(realHome - realAway);
-  if (pronoTrend !== realTrend) return 0;
-  // Victoire (dom ou ext) = 3 pts, Nul = 1 pt
-  return realTrend === 0 ? 1 : 3;
-}
-
-// Score exact : bonus basé sur la cote (plus c'est surprenant, plus c'est récompensé)
-function calcExactBonus(
+// Bonne tendance : cote x 10 pts
+// Score exact : cote x 10 pts + bonus classement foot (victoire = 3, nul = 1)
+function calcOddsPoints(
   realHome: number, realAway: number,
   odds?: { home: number; draw: number; away: number }
 ): number {
-  if (!odds) return 20;
+  if (!odds) return 10;
   const realTrend = Math.sign(realHome - realAway);
   if (realTrend > 0) return Math.round(odds.home * 10);
   if (realTrend === 0) return Math.round(odds.draw * 10);
   return Math.round(odds.away * 10);
 }
 
+function calcExactBonus(
+  realHome: number, realAway: number,
+  pronoHome: number, pronoAway: number
+): number {
+  if (Number(pronoHome) !== realHome || Number(pronoAway) !== realAway) return 0;
+  return Math.sign(realHome - realAway) === 0 ? 1 : 3;
+}
+
 function computePoints(matchId: string, realHome: number, realAway: number, odds?: Match['odds']): void {
   const all = db.get<Prono>('pf_pronos');
   const updated = all.map(p => {
     if (p.matchId !== matchId) return p;
-    const trendPoints = calcTrendPoints(p.homeScore, p.awayScore, realHome, realAway);
-    const isExact = p.homeScore === realHome && p.awayScore === realAway;
-    const bonusExact = isExact ? calcExactBonus(realHome, realAway, odds) : 0;
-    const subtotal = trendPoints + bonusExact;
+    const pronoTrend = Math.sign(Number(p.homeScore) - Number(p.awayScore));
+    const realTrend = Math.sign(realHome - realAway);
+    if (pronoTrend !== realTrend) {
+      return { ...p, points: 0, bonusExact: 0, totalPoints: 0 };
+    }
+    const oddsPoints = calcOddsPoints(realHome, realAway, odds);
+    const bonusExact = calcExactBonus(realHome, realAway, p.homeScore, p.awayScore);
+    const subtotal = oddsPoints + bonusExact;
     const totalPoints = p.joker ? subtotal * 2 : subtotal;
-    return { ...p, points: trendPoints, bonusExact, totalPoints };
+    return { ...p, points: oddsPoints, bonusExact, totalPoints };
   });
   db.set('pf_pronos', updated);
 }
