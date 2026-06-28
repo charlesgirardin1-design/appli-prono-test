@@ -37,8 +37,8 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
                                         <p>Une erreur est survenue.</p>p>
                                       <button onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}>
                                                   Recharger
-                                      </button>button>
-                            </div>div>
+                                      </button>
+                            </div>
                           );
           }
           return this.props.children;
