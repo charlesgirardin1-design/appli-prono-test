@@ -4,14 +4,17 @@ import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, Fl
 import { useAuth } from '../contexts/AuthContext';
 import { isAdmin } from '../lib/auth';
 
+type NavLink = { to: string; label: string; icon: React.ElementType };
+
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-const adminUser = isAdmin(currentUser?.uid);
   const [open, setOpen] = React.useState(false);
 
-  const links = [
+  const adminUser = isAdmin(currentUser?.uid);
+
+  const links: NavLink[] = [
     { to: '/', label: 'Matchs', icon: Calendar },
     { to: '/favoris', label: 'Favoris', icon: Star },
     { to: '/classement', label: 'Classement', icon: BarChart3 },
@@ -20,6 +23,10 @@ const adminUser = isAdmin(currentUser?.uid);
     { to: '/test', label: 'Test', icon: FlaskConical },
     { to: '/retuyrraz', label: 'Retuyrraz', icon: Menu },
   ];
+
+  if (adminUser) {
+    links.push({ to: '/admin', label: 'Admin', icon: Shield });
+  }
 
   async function handleLogout() {
     await logout();
@@ -38,7 +45,7 @@ const adminUser = isAdmin(currentUser?.uid);
       </button>
 
       <div className={`navbar-links ${open ? 'open' : ''}`}>
-        {[...links, ...adminLinks].map(({ to, label, icon: Icon }) => (
+        {links.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
