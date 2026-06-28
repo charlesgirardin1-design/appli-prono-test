@@ -66,39 +66,38 @@ export async function saveProno(
   }
 }
 
+// ---- CALCUL DES POINTS ----
+// Bon prono (bonne tendance) : points de classement foot (victoire = 3, nul = 1)
 function calcTrendPoints(
   pronoHome: number, pronoAway: number,
-  realHome: number, realAway: number,
-  odds?: { home: number; draw: number; away: number }
+  realHome: number, realAway: number
 ): number {
   const pronoTrend = Math.sign(pronoHome - pronoAway);
   const realTrend = Math.sign(realHome - realAway);
   if (pronoTrend !== realTrend) return 0;
-  if (!odds) return 10;
+  // Victoire (dom ou ext) = 3 pts, Nul = 1 pt
+  return realTrend === 0 ? 1 : 3;
+}
+
+// Score exact : bonus basé sur la cote (plus c'est surprenant, plus c'est récompensé)
+function calcExactBonus(
+  realHome: number, realAway: number,
+  odds?: { home: number; draw: number; away: number }
+): number {
+  if (!odds) return 20;
+  const realTrend = Math.sign(realHome - realAway);
   if (realTrend > 0) return Math.round(odds.home * 10);
   if (realTrend === 0) return Math.round(odds.draw * 10);
   return Math.round(odds.away * 10);
 }
 
-function calcExactBonus(rarityRatio: number): number {
-  if (rarityRatio >= 0.5) return 20;
-  if (rarityRatio >= 0.3) return 30;
-  if (rarityRatio >= 0.15) return 50;
-  if (rarityRatio >= 0.05) return 75;
-  return 100;
-}
-
 function computePoints(matchId: string, realHome: number, realAway: number, odds?: Match['odds']): void {
   const all = db.get<Prono>('pf_pronos');
-  const matchPronos = all.filter(p => p.matchId === matchId);
-  const exactCount = matchPronos.filter(p => p.homeScore === realHome && p.awayScore === realAway).length;
-  const rarityRatio = matchPronos.length > 0 ? exactCount / matchPronos.length : 0;
-
   const updated = all.map(p => {
     if (p.matchId !== matchId) return p;
-    const trendPoints = calcTrendPoints(p.homeScore, p.awayScore, realHome, realAway, odds);
+    const trendPoints = calcTrendPoints(p.homeScore, p.awayScore, realHome, realAway);
     const isExact = p.homeScore === realHome && p.awayScore === realAway;
-    const bonusExact = isExact ? calcExactBonus(rarityRatio) : 0;
+    const bonusExact = isExact ? calcExactBonus(realHome, realAway, odds) : 0;
     const subtotal = trendPoints + bonusExact;
     const totalPoints = p.joker ? subtotal * 2 : subtotal;
     return { ...p, points: trendPoints, bonusExact, totalPoints };
@@ -106,8 +105,17 @@ function computePoints(matchId: string, realHome: number, realAway: number, odds
   db.set('pf_pronos', updated);
 }
 
+// Recalcule les points pour tous les matchs terminés (appelé au re-seed)
+export function recomputeAllPoints(): void {
+  const matches = db.get<Match>('pf_matches');
+  for (const m of matches) {
+    if (m.status === 'finished' && m.homeScore !== undefined && m.awayScore !== undefined) {
+      computePoints(m.id, m.homeScore, m.awayScore, m.odds);
+    }
+  }
+}
+
 // ---- GROUPS ----
-// Le code encode les infos du groupe en base64 pour permettre le partage entre appareils
 function encodeGroupCode(group: { id: string; name: string }): string {
   try {
     return btoa(JSON.stringify({ id: group.id, name: group.name }))
@@ -135,7 +143,6 @@ export function joinGroup(code: string): Promise<Group | null> {
   const all = db.get<Group>('pf_groups');
   const me = pid();
 
-  // Chercher dans les groupes locaux
   const found = all.find(g => g.code.toUpperCase() === code.toUpperCase());
   if (found) {
     if (!found.members.includes(me)) {
@@ -146,7 +153,6 @@ export function joinGroup(code: string): Promise<Group | null> {
     return Promise.resolve(found);
   }
 
-  // Essayer de décoder depuis le code (groupe partagé depuis un autre appareil)
   try {
     const padded = code.replace(/-/g, '+').replace(/_/g, '/');
     const json = atob(padded);
