@@ -11,7 +11,7 @@ export interface StoredUser {
 
 // UIDs ayant les droits administrateur
 export const ADMIN_UIDS: string[] = [
-  'pid_118p612bstbmqk2xnfz',
+  'pid_a5czgh8zgpmqxrys0u',
 ];
 
 const USERS_KEY = 'pf_users';
