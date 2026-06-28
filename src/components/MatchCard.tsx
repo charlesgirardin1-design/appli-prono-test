@@ -172,7 +172,7 @@ export default function MatchCard({ match }: Props) {
                     <span className="odd-label">{label}</span>
                     <span className="odd-prob">{prob}%</span>
                     <span className="odd-value">{val.toFixed(2)}</span>
-                    <span className="odd-pts">+{Math.round(val * 10)} si exact</span>
+                    <span className="odd-pts">+{Math.round(val * 10)} pts</span>
                   </div>
                 ))}
               </div>
