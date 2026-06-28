@@ -2,7 +2,7 @@ import { db } from './storage';
 import { Match } from '../types';
 import { WORLD_CUP_2026_MATCHES } from '../data/worldCup2026';
 
-const SEED_VERSION = 'v5'; // incrémenter pour forcer un re-seed
+const SEED_VERSION = 'v6'; // incrémenter pour forcer un re-seed
 
 export function seedMatchesIfNeeded(): void {
   const seeded = localStorage.getItem('pf_seeded');
