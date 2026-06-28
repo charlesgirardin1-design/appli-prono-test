@@ -6,11 +6,29 @@ import { Calendar, Flame } from 'lucide-react';
 import { useStreak } from '../hooks/useStreak';
 import { getEffectiveStatus } from '../lib/matchStatus';
 
+const PHASES = [
+  'Phase de groupes',
+  'Huitièmes de finale',
+  'Quarts de finale',
+  'Demi-finale',
+  'Finale',
+];
+
+const PHASE_LABELS: Record<string, string> = {
+  'Phase de groupes': 'Poules',
+  'Huitièmes de finale': '8èmes',
+  'Quarts de finale': 'Quarts',
+  'Demi-finale': 'Demis',
+  'Finale': 'Finale',
+};
+
 export default function Home() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pronos, setPronos] = useState<Prono[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'upcoming' | 'live' | 'finished' | 'all'>('upcoming');
+  const [filterPhase, setFilterPhase] = useState<string>('');
+  const [filterTeam, setFilterTeam] = useState<string>('');
   const streak = useStreak();
 
   const loadData = () => {
@@ -31,22 +49,33 @@ export default function Home() {
     };
   }, []);
 
+  // Equipes uniques triées alphabétiquement
+  const allTeams = Array.from(new Set(
+    matches.flatMap(m => [m.homeTeam.name, m.awayTeam.name])
+  )).sort();
+
   const filtered = matches
-    .filter(m => filter === 'all' || getEffectiveStatus(m) === filter)
+    .filter(m => {
+      if (filter !== 'all' && getEffectiveStatus(m) !== filter) return false;
+      if (filterPhase && m.phase !== filterPhase) return false;
+      if (filterTeam && m.homeTeam.name !== filterTeam && m.awayTeam.name !== filterTeam) return false;
+      return true;
+    })
     .sort((a, b) => {
       const da = new Date(a.date).getTime();
       const db = new Date(b.date).getTime();
-      // Terminés : plus récent en premier
       if (filter === 'finished') return db - da;
-      // À venir / live / tous : plus proche en premier
       return da - db;
     });
+
   const upcomingCount = matches.filter(m => getEffectiveStatus(m) === 'upcoming').length;
   const liveCount = matches.filter(m => getEffectiveStatus(m) === 'live').length;
   const pronosCount = pronos.filter(p =>
     matches.find(m => m.id === p.matchId && getEffectiveStatus(m) === 'upcoming')
   ).length;
   const progressPct = upcomingCount > 0 ? Math.round((pronosCount / upcomingCount) * 100) : 0;
+
+  const hasActiveSubFilter = filterPhase !== '' || filterTeam !== '';
 
   return (
     <div className="page">
@@ -67,6 +96,42 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Filtres phase + pays */}
+      <div className="sub-filters">
+        <div className="phase-filters">
+          <button
+            className={`phase-btn ${filterPhase === '' ? 'active' : ''}`}
+            onClick={() => setFilterPhase('')}
+          >
+            Toutes
+          </button>
+          {PHASES.map(p => (
+            <button
+              key={p}
+              className={`phase-btn ${filterPhase === p ? 'active' : ''}`}
+              onClick={() => setFilterPhase(filterPhase === p ? '' : p)}
+            >
+              {PHASE_LABELS[p]}
+            </button>
+          ))}
+        </div>
+        <select
+          className="team-select"
+          value={filterTeam}
+          onChange={e => setFilterTeam(e.target.value)}
+        >
+          <option value="">Tous les pays</option>
+          {allTeams.map(t => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        {hasActiveSubFilter && (
+          <button className="clear-filters-btn" onClick={() => { setFilterPhase(''); setFilterTeam(''); }}>
+            Réinitialiser
+          </button>
+        )}
       </div>
 
       {/* Barre de progression des pronos */}
