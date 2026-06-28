@@ -19,7 +19,9 @@ export default function Navbar() {
     { to: '/favoris', label: 'Favoris', icon: Star },
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
-    { to: '/parametres', label: 'Paramètres', icon: Settings },
+    { to: '/profil', label: 'Profil', icon: User },
+  { to: '/champion', label: 'Champion', icon: Trophy },
+  { to: '/parametres', label: 'Paramètres', icon: Settings },
     ];
 
   if (adminUser) {
