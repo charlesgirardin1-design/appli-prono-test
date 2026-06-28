@@ -5,7 +5,13 @@ export interface StoredUser {
   passwordHash: string;
   provider?: 'email' | 'google' | 'apple';
   avatar?: string;
+  isBanned?: boolean;
 }
+
+// UIDs ayant les droits administrateur
+export const ADMIN_UIDS: string[] = [
+  'pid_118p612bstbmqk2xnfz',
+];
 
 const USERS_KEY = 'pf_users';
 const SESSION_KEY = 'pf_session';
@@ -34,7 +40,7 @@ function nextJoueurNumber(): string {
 export function signup(email: string, password: string, displayName?: string): StoredUser {
   const users = getUsers();
   if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-    throw new Error('Un compte existe déjà avec cet email.');
+    throw new Error('Un compte existe avec cet email.');
   }
   const user: StoredUser = {
     uid: 'uid_' + Math.random().toString(36).substring(2) + Date.now().toString(36),
@@ -55,11 +61,11 @@ export function login(email: string, password: string): StoredUser {
     u => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === hashPassword(password)
   );
   if (!user) throw new Error('Email ou mot de passe incorrect.');
+  if (user.isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
   setSession(user.uid);
   return user;
 }
 
-// Google / Apple OAuth — upsert user by email
 export function loginWithOAuth(opts: {
   email: string;
   displayName: string;
@@ -70,7 +76,7 @@ export function loginWithOAuth(opts: {
   const users = getUsers();
   let user = users.find(u => u.email.toLowerCase() === opts.email.toLowerCase());
   if (user) {
-    // Update display info if needed
+    if (user.isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
     const idx = users.indexOf(user);
     users[idx] = { ...user, displayName: user.displayName, avatar: opts.avatar ?? user.avatar, provider: opts.provider };
     user = users[idx];
@@ -111,4 +117,31 @@ export function getUserById(uid: string): StoredUser | null {
 
 export function getAllUsers(): StoredUser[] {
   return getUsers().map(u => ({ ...u, passwordHash: '' }));
+}
+
+// ---- ADMIN ----
+
+export function isAdmin(uid?: string): boolean {
+  const id = uid ?? getCurrentUser()?.uid;
+  if (!id) return false;
+  return ADMIN_UIDS.includes(id);
+}
+
+export function banUser(targetUid: string): void {
+  if (!isAdmin()) throw new Error('Permission refusee.');
+  const users = getUsers();
+  const idx = users.findIndex(u => u.uid === targetUid);
+  if (idx === -1) throw new Error('Utilisateur introuvable.');
+  if (ADMIN_UIDS.includes(targetUid)) throw new Error('Impossible de bannir un administrateur.');
+  users[idx] = { ...users[idx], isBanned: true };
+  saveUsers(users);
+}
+
+export function unbanUser(targetUid: string): void {
+  if (!isAdmin()) throw new Error('Permission refusee.');
+  const users = getUsers();
+  const idx = users.findIndex(u => u.uid === targetUid);
+  if (idx === -1) throw new Error('Utilisateur introuvable.');
+  users[idx] = { ...users[idx], isBanned: false };
+  saveUsers(users);
 }
