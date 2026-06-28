@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getSettings, saveSettings, applyTheme } from '../lib/settings';
-import { getCurrentUser, updateDisplayName } from '../lib/auth';
+import { getCurrentUser, updateDisplayName, deleteAccount } from '../lib/auth';
 import { Settings, User, Moon, Sun, Trash2, CheckCircle, Copy } from 'lucide-react';
 
 export default function ParametresPage() {
   const [pseudo, setPseudo] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [playerId, setPlayerId] = useState('');
+  const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -65,6 +67,16 @@ export default function ParametresPage() {
   function resetAll() {
     if (!window.confirm("Reinitialiser toutes les donnees de l'application ?")) return;
     ['pf_pronos', 'pf_matches', 'pf_groups', 'pf_favoris', 'pf_seeded', 'pf_settings', 'pf_streak'].forEach(k => localStorage.removeItem(k));
+    window.location.reload();
+  }
+
+
+  function handleDeleteAccount() {
+    if (!window.confirm('Supprimer definitivement votre compte et toutes vos donnees ? Cette action est irreversible.')) return;
+    const user = getCurrentUser();
+    if (!user) return;
+    deleteAccount(user.uid);
+    navigate('/login');
     window.location.reload();
   }
 
@@ -130,6 +142,13 @@ export default function ParametresPage() {
               <p>Supprime toutes les donnees (matchs, groupes, parametres).</p>
             </div>
             <button className="btn-danger" onClick={resetAll}>Tout effacer</button>
+          </div>
+          <div className="danger-item" style={{borderTop: '1px solid #374151', paddingTop: '1rem', marginTop: '0.5rem'}}>
+            <div>
+              <strong style={{color: '#ef4444'}}>Supprimer mon compte</strong>
+              <p>Supprime definitivement votre compte et toutes vos donnees. Irreversible.</p>
+            </div>
+            <button className="btn-danger" onClick={handleDeleteAccount} style={{background: '#7f1d1d'}}>Supprimer le compte</button>
           </div>
         </div>
       </div>
