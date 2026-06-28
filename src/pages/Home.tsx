@@ -6,30 +6,21 @@ import { Calendar, Flame } from 'lucide-react';
 import { useStreak } from '../hooks/useStreak';
 import { getEffectiveStatus } from '../lib/matchStatus';
 
-const PHASES = [
-  'Phase de groupes',
-  'Huitièmes de finale',
-  'Quarts de finale',
-  'Demi-finale',
-  'Finale',
-];
+function formatDateBtn(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
 
-const PHASE_LABELS: Record<string, string> = {
-  'Phase de groupes': 'Poules',
-  'Huitièmes de finale': '8èmes',
-  'Quarts de finale': 'Quarts',
-  'Demi-finale': 'Demis',
-  'Finale': 'Finale',
-};
+function isoDay(iso: string): string {
+  return iso.slice(0, 10);
+}
 
 export default function Home() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pronos, setPronos] = useState<Prono[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'upcoming' | 'live' | 'finished' | 'all'>('upcoming');
-  const [filterPhase, setFilterPhase] = useState<string>('');
-  const [filterTeam, setFilterTeam] = useState<string>('');
-  const [teams, setTeams] = useState<string[]>([]);
+  const [filterDate, setFilterDate] = useState<string | null>(null);
   const streak = useStreak();
 
   const loadData = () => {
@@ -50,12 +41,33 @@ export default function Home() {
     };
   }, []);
 
-  // Équipes uniques, triées alphabétiquement
-  useEffect(() => {
-    const seen = new Set<string>();
-    matches.forEach(m => { seen.add(m.homeTeam.name); seen.add(m.awayTeam.name); });
-    setTeams(Array.from(seen).sort((a, b) => a.localeCompare(b)));
-  }, [matches]);
+  // Quand on passe en "Terminés", sélectionner la date la plus récente par défaut
+  function handleFilterChange(f: typeof filter) {
+    setFilter(f);
+    if (f === 'finished') {
+      const finishedDays = matches
+        .filter(m => getEffectiveStatus(m) === 'finished')
+        .map(m => isoDay(m.date))
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .sort((a, b) => b.localeCompare(a));
+      setFilterDate(finishedDays[0] ?? null);
+    } else {
+      setFilterDate(null);
+    }
+  }
+
+  const finishedMatches = matches.filter(m => getEffectiveStatus(m) === 'finished');
+  const finishedDays = [...new Set(finishedMatches.map(m => isoDay(m.date)))].sort((a, b) => b.localeCompare(a));
+
+  const filtered = (() => {
+    if (filter === 'finished') {
+      const base = filterDate
+        ? finishedMatches.filter(m => isoDay(m.date) === filterDate)
+        : finishedMatches;
+      return [...base].sort((a, b) => b.date.localeCompare(a.date));
+    }
+    return matches.filter(m => filter === 'all' || getEffectiveStatus(m) === filter);
+  })();
 
   const upcomingCount = matches.filter(m => getEffectiveStatus(m) === 'upcoming').length;
   const liveCount = matches.filter(m => getEffectiveStatus(m) === 'live').length;
@@ -63,21 +75,6 @@ export default function Home() {
     matches.find(m => m.id === p.matchId && getEffectiveStatus(m) === 'upcoming')
   ).length;
   const progressPct = upcomingCount > 0 ? Math.round((pronosCount / upcomingCount) * 100) : 0;
-
-  let filtered = matches.filter(m => {
-    const status = getEffectiveStatus(m);
-    if (filter !== 'all' && status !== filter) return false;
-    if (filterPhase && m.phase !== filterPhase) return false;
-    if (filterTeam && m.homeTeam.name !== filterTeam && m.awayTeam.name !== filterTeam) return false;
-    return true;
-  });
-
-  // Trier les matchs terminés du plus récent au plus ancien
-  if (filter === 'finished') {
-    filtered = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }
-
-  const hasSubFilters = filterPhase || filterTeam;
 
   return (
     <div className="page">
@@ -92,7 +89,11 @@ export default function Home() {
           )}
           <div className="filter-tabs">
             {(['upcoming', 'live', 'finished', 'all'] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)} className={`tab ${filter === f ? 'active' : ''} ${f === 'live' && liveCount > 0 ? 'live-tab' : ''}`}>
+              <button
+                key={f}
+                onClick={() => handleFilterChange(f)}
+                className={`tab ${filter === f ? 'active' : ''} ${f === 'live' && liveCount > 0 ? 'live-tab' : ''}`}
+              >
                 {f === 'upcoming' ? 'À venir' : f === 'live' ? `En cours${liveCount > 0 ? ` (${liveCount})` : ''}` : f === 'finished' ? 'Terminés' : 'Tous'}
               </button>
             ))}
@@ -100,33 +101,20 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Sous-filtres phase + équipe */}
-      <div className="sub-filters">
-        <div className="phase-filters">
-          {PHASES.map(ph => (
+      {/* Boutons de date pour les matchs terminés */}
+      {filter === 'finished' && finishedDays.length > 1 && (
+        <div className="date-filter-row">
+          {finishedDays.map(day => (
             <button
-              key={ph}
-              className={`phase-btn ${filterPhase === ph ? 'active' : ''}`}
-              onClick={() => setFilterPhase(prev => prev === ph ? '' : ph)}
+              key={day}
+              onClick={() => setFilterDate(day)}
+              className={`date-btn ${filterDate === day ? 'active' : ''}`}
             >
-              {PHASE_LABELS[ph]}
+              {formatDateBtn(day + 'T12:00:00')}
             </button>
           ))}
         </div>
-        <select
-          className="team-select"
-          value={filterTeam}
-          onChange={e => setFilterTeam(e.target.value)}
-        >
-          <option value="">Toutes équipes</option>
-          {teams.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        {hasSubFilters && (
-          <button className="clear-filters-btn" onClick={() => { setFilterPhase(''); setFilterTeam(''); }}>
-            ✕ Effacer
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Barre de progression des pronos */}
       {upcomingCount > 0 && (
@@ -136,10 +124,7 @@ export default function Home() {
             <span className="progress-pct">{progressPct}%</span>
           </div>
           <div className="progress-bar-track">
-            <div
-              className="progress-bar-fill"
-              style={{ width: `${progressPct}%` }}
-            />
+            <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
       )}
