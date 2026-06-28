@@ -122,7 +122,15 @@ export function logout(): void {
 export function getCurrentUser(): StoredUser | null {
   const uid = localStorage.getItem(SESSION_KEY);
   if (!uid) return null;
-  return getUsers().find(u => u.uid === uid) || null;
+  const users = getUsers();
+  const idx = users.findIndex(u => u.uid === uid);
+  if (idx === -1) return null;
+  // Migration: assigner un playerId unique si absent (comptes crees avant cette feature)
+  if (!users[idx].playerId) {
+    users[idx] = { ...users[idx], playerId: genPlayerId() };
+    saveUsers(users);
+  }
+  return users[idx];
 }
 
 function setSession(uid: string): void {
