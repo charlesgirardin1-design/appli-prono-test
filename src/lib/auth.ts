@@ -6,6 +6,7 @@ export interface StoredUser {
   provider?: 'email' | 'google' | 'apple';
   avatar?: string;
   isBanned?: boolean;
+  playerId?: string; // identifiant stable unique par compte
 }
 
 // UIDs ayant les droits administrateur
@@ -37,6 +38,10 @@ function nextJoueurNumber(): string {
   return String(users.length + 1).padStart(3, '0');
 }
 
+function genPlayerId(): string {
+  return 'pid_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
 export function signup(email: string, password: string, displayName?: string): StoredUser {
   const users = getUsers();
   if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
@@ -48,6 +53,7 @@ export function signup(email: string, password: string, displayName?: string): S
     displayName: displayName?.trim() || `Joueur#${nextJoueurNumber()}`,
     passwordHash: hashPassword(password),
     provider: 'email',
+    playerId: genPlayerId(),
   };
   users.push(user);
   saveUsers(users);
@@ -57,13 +63,18 @@ export function signup(email: string, password: string, displayName?: string): S
 
 export function login(email: string, password: string): StoredUser {
   const users = getUsers();
-  const user = users.find(
+  const idx = users.findIndex(
     u => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === hashPassword(password)
   );
-  if (!user) throw new Error('Email ou mot de passe incorrect.');
-  if (user.isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
-  setSession(user.uid);
-  return user;
+  if (idx === -1) throw new Error('Email ou mot de passe incorrect.');
+  if (users[idx].isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
+  // Ajouter playerId si absent (migration comptes existants)
+  if (!users[idx].playerId) {
+    users[idx] = { ...users[idx], playerId: genPlayerId() };
+    saveUsers(users);
+  }
+  setSession(users[idx].uid);
+  return users[idx];
 }
 
 export function loginWithOAuth(opts: {
@@ -74,27 +85,34 @@ export function loginWithOAuth(opts: {
   providerUid?: string;
 }): StoredUser {
   const users = getUsers();
-  let user = users.find(u => u.email.toLowerCase() === opts.email.toLowerCase());
-  if (user) {
-    if (user.isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
-    const idx = users.indexOf(user);
-    users[idx] = { ...user, displayName: user.displayName, avatar: opts.avatar ?? user.avatar, provider: opts.provider };
-    user = users[idx];
+  let idx = users.findIndex(u => u.email.toLowerCase() === opts.email.toLowerCase());
+  if (idx !== -1) {
+    if (users[idx].isBanned) throw new Error('Ce compte a ete suspendu par un administrateur.');
+    users[idx] = {
+      ...users[idx],
+      avatar: opts.avatar ?? users[idx].avatar,
+      provider: opts.provider,
+      // Ajouter playerId si absent (migration)
+      playerId: users[idx].playerId ?? genPlayerId(),
+    };
     saveUsers(users);
+    setSession(users[idx].uid);
+    return users[idx];
   } else {
-    user = {
+    const user: StoredUser = {
       uid: opts.provider + '_' + (opts.providerUid || Math.random().toString(36).substring(2)),
       email: opts.email.toLowerCase(),
       displayName: opts.displayName || `Joueur#${nextJoueurNumber()}`,
       passwordHash: '',
       provider: opts.provider,
       avatar: opts.avatar,
+      playerId: genPlayerId(),
     };
     users.push(user);
     saveUsers(users);
+    setSession(user.uid);
+    return user;
   }
-  setSession(user.uid);
-  return user;
 }
 
 export function logout(): void {
@@ -119,12 +137,26 @@ export function getAllUsers(): StoredUser[] {
   return getUsers().map(u => ({ ...u, passwordHash: '' }));
 }
 
+export function updateDisplayName(uid: string, newName: string): StoredUser {
+  const users = getUsers();
+  const idx = users.findIndex(u => u.uid === uid);
+  if (idx === -1) throw new Error('Utilisateur introuvable.');
+  users[idx] = { ...users[idx], displayName: newName.trim() || 'Joueur' };
+  saveUsers(users);
+  return users[idx];
+}
+
 // ---- ADMIN ----
-// Verifier contre le playerId des settings (affiché dans les paramètres du compte)
-// et aussi contre le uid auth pour compatibilité
 
 export function isAdmin(uid?: string): boolean {
-  // Vérifier le playerId (settings) en priorité
+  // Vérifier le playerId du compte connecté en priorité
+  const currentUid = uid || getCurrentUser()?.uid;
+  if (currentUid) {
+    const users = getUsers();
+    const user = users.find(u => u.uid === currentUid);
+    if (user?.playerId && ADMIN_UIDS.includes(user.playerId)) return true;
+  }
+  // Fallback: pf_settings (compatibilité)
   try {
     const raw = localStorage.getItem('pf_settings');
     if (raw) {
@@ -132,11 +164,6 @@ export function isAdmin(uid?: string): boolean {
       if (settings.playerId && ADMIN_UIDS.includes(settings.playerId)) return true;
     }
   } catch {}
-  // Vérifier aussi le uid auth passé en paramètre
-  if (uid && ADMIN_UIDS.includes(uid)) return true;
-  // Vérifier le uid du user connecté
-  const authUid = getCurrentUser()?.uid;
-  if (authUid && ADMIN_UIDS.includes(authUid)) return true;
   return false;
 }
 
