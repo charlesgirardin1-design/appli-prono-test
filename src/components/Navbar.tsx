@@ -20,8 +20,7 @@ export default function Navbar() {
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
     { to: '/parametres', label: 'Paramètres', icon: Settings },
-    { to: '/retuyrraz', label: 'Retuyrraz', icon: Menu },
-  ];
+    ];
 
   if (adminUser) {
     links.push({ to: '/test', label: 'Test', icon: FlaskConical });
