@@ -2,7 +2,7 @@ import React, { useEffect, Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { seedMatchesIfNeeded } from './lib/seed';
+import { seedMatchesIfNeeded, refreshOdds } from './lib/seed';
 import { applyTheme, getSettings } from './lib/settings';
 import { startLiveScorePolling } from './lib/liveScores';
 import Navbar from './components/Navbar';
@@ -60,6 +60,7 @@ function AppRoutes() {
   useEffect(() => {
     seedMatchesIfNeeded();
     applyTheme(getSettings().theme);
+    refreshOdds();
 
     const apiKey =
       process.env.REACT_APP_FOOTBALL_DATA_KEY ||
