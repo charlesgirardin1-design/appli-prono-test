@@ -41,23 +41,22 @@ export default function Home() {
     };
   }, []);
 
-  // Quand on passe en "Terminés", sélectionner la date la plus récente par défaut
   function handleFilterChange(f: typeof filter) {
     setFilter(f);
     if (f === 'finished') {
-      const finishedDays = matches
+      const days = matches
         .filter(m => getEffectiveStatus(m) === 'finished')
         .map(m => isoDay(m.date))
         .filter((v, i, a) => a.indexOf(v) === i)
         .sort((a, b) => b.localeCompare(a));
-      setFilterDate(finishedDays[0] ?? null);
+      setFilterDate(days[0] ?? null);
     } else {
       setFilterDate(null);
     }
   }
 
   const finishedMatches = matches.filter(m => getEffectiveStatus(m) === 'finished');
-  const finishedDays = [...new Set(finishedMatches.map(m => isoDay(m.date)))].sort((a, b) => b.localeCompare(a));
+  const finishedDays = Array.from(new Set(finishedMatches.map(m => isoDay(m.date)))).sort((a, b) => b.localeCompare(a));
 
   const filtered = (() => {
     if (filter === 'finished') {
@@ -101,7 +100,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Boutons de date pour les matchs terminés */}
       {filter === 'finished' && finishedDays.length > 1 && (
         <div className="date-filter-row">
           {finishedDays.map(day => (
@@ -116,7 +114,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Barre de progression des pronos */}
       {upcomingCount > 0 && (
         <div className="progress-bar-wrap">
           <div className="progress-bar-info">
