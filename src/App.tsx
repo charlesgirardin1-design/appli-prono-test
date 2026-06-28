@@ -15,8 +15,6 @@ import TestPage from './pages/Test';
 import RetuyrrazPage from './pages/Retuyrraz';
 import AdminPage from './pages/Admin';
 import { isAdmin } from './lib/auth';
-import AdminPage from './pages/Admin';
-import { isAdmin } from './lib/auth';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import './App.css';
@@ -47,6 +45,13 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
   return currentUser ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useAuth();
+  if (!currentUser) return <Navigate to="/login" />;
+  if (!isAdmin(currentUser.uid)) return <Navigate to="/" />;
+  return <>{children}</>;
 }
 
 function AppRoutes() {
@@ -86,8 +91,7 @@ function AppRoutes() {
           <Route path="/parametres" element={<PrivateRoute><ParametresPage /></PrivateRoute>} />
           <Route path="/test" element={<PrivateRoute><TestPage /></PrivateRoute>} />
           <Route path="/retuyrraz" element={<PrivateRoute><RetuyrrazPage /></PrivateRoute>} />
-<Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
-<Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
