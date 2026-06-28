@@ -1536,3 +1536,141 @@ body {
   .sub-filters { gap: 0.4rem; }
   .team-select { max-width: 140px; }
 }
+
+/* ===== MATCH CARD ENTRANCE ANIMATION ===== */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.matches-grid .match-card { animation: slideUp 0.35s ease both; }
+.matches-grid .match-card:nth-child(1)  { animation-delay: 0ms; }
+.matches-grid .match-card:nth-child(2)  { animation-delay: 55ms; }
+.matches-grid .match-card:nth-child(3)  { animation-delay: 110ms; }
+.matches-grid .match-card:nth-child(4)  { animation-delay: 165ms; }
+.matches-grid .match-card:nth-child(5)  { animation-delay: 220ms; }
+.matches-grid .match-card:nth-child(6)  { animation-delay: 275ms; }
+.matches-grid .match-card:nth-child(7)  { animation-delay: 330ms; }
+.matches-grid .match-card:nth-child(8)  { animation-delay: 385ms; }
+.matches-grid .match-card:nth-child(n+9) { animation-delay: 420ms; }
+
+/* ===== LEADERBOARD ROW ENTRANCE ===== */
+@keyframes fadeSlideLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.leaderboard .leaderboard-row { animation: fadeSlideLeft 0.3s ease both; }
+.leaderboard .leaderboard-row:nth-child(1) { animation-delay: 0ms; }
+.leaderboard .leaderboard-row:nth-child(2) { animation-delay: 50ms; }
+.leaderboard .leaderboard-row:nth-child(3) { animation-delay: 100ms; }
+.leaderboard .leaderboard-row:nth-child(4) { animation-delay: 150ms; }
+.leaderboard .leaderboard-row:nth-child(5) { animation-delay: 200ms; }
+.leaderboard .leaderboard-row:nth-child(n+6) { animation-delay: 240ms; }
+
+/* ===== SKELETON LOADER ===== */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-line { height: 13px; border-radius: 4px; }
+.skeleton-line.short  { width: 38%; }
+.skeleton-line.medium { width: 62%; }
+.skeleton-line.long   { width: 88%; }
+.skeleton-line.full   { width: 100%; }
+
+.skeleton-grid { display: grid; gap: 1rem; }
+
+/* ===== PAGE FADE-IN ===== */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page { animation: pageFade 0.3s ease both; }
+
+/* ===== MATCH CARD ENTRANCE ANIMATION ===== */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.matches-grid .match-card { animation: slideUp 0.35s ease both; }
+.matches-grid .match-card:nth-child(1)  { animation-delay: 0ms; }
+.matches-grid .match-card:nth-child(2)  { animation-delay: 55ms; }
+.matches-grid .match-card:nth-child(3)  { animation-delay: 110ms; }
+.matches-grid .match-card:nth-child(4)  { animation-delay: 165ms; }
+.matches-grid .match-card:nth-child(5)  { animation-delay: 220ms; }
+.matches-grid .match-card:nth-child(6)  { animation-delay: 275ms; }
+.matches-grid .match-card:nth-child(7)  { animation-delay: 330ms; }
+.matches-grid .match-card:nth-child(8)  { animation-delay: 385ms; }
+.matches-grid .match-card:nth-child(n+9) { animation-delay: 420ms; }
+
+/* ===== LEADERBOARD ROW ENTRANCE ===== */
+@keyframes fadeSlideLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.leaderboard .leaderboard-row { animation: fadeSlideLeft 0.3s ease both; }
+.leaderboard .leaderboard-row:nth-child(1) { animation-delay: 0ms; }
+.leaderboard .leaderboard-row:nth-child(2) { animation-delay: 50ms; }
+.leaderboard .leaderboard-row:nth-child(3) { animation-delay: 100ms; }
+.leaderboard .leaderboard-row:nth-child(4) { animation-delay: 150ms; }
+.leaderboard .leaderboard-row:nth-child(5) { animation-delay: 200ms; }
+.leaderboard .leaderboard-row:nth-child(n+6) { animation-delay: 240ms; }
+
+/* ===== SKELETON LOADER ===== */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-line { height: 13px; border-radius: 4px; }
+.skeleton-line.short  { width: 38%; }
+.skeleton-line.medium { width: 62%; }
+.skeleton-line.long   { width: 88%; }
+.skeleton-line.full   { width: 100%; }
+
+/* ===== PAGE FADE-IN ===== */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page { animation: pageFade 0.3s ease both; }
