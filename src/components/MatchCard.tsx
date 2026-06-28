@@ -158,8 +158,8 @@ export default function MatchCard({ match }: Props) {
             <div className="odds-section">
               <div className="odds-header">
                 <span className="odds-title">Cotes</span>
-                <span className="odds-hint" title="La cote indique la difficulté du pronostic. Plus elle est élevée, plus les points rapportés sont importants. Ex : cote 3.10 = 31 pts si bonne tendance.">
-                  ℹ️ Cote × 10 = pts
+                <span className="odds-hint" title="Bonne tendance = 3 pts (victoire) ou 1 pt (nul). Score exact = tendance + bonus cote. Ex : exact sur cote 1.30 → 3 + 13 = 16 pts.">
+                  ℹ️ Bonus si score exact
                 </span>
               </div>
               <div className="odds-row">
@@ -172,7 +172,7 @@ export default function MatchCard({ match }: Props) {
                     <span className="odd-label">{label}</span>
                     <span className="odd-prob">{prob}%</span>
                     <span className="odd-value">{val.toFixed(2)}</span>
-                    <span className="odd-pts">{Math.round(val * 10)} pts</span>
+                    <span className="odd-pts">+{Math.round(val * 10)} si exact</span>
                   </div>
                 ))}
               </div>
