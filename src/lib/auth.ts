@@ -175,6 +175,22 @@ export function isAdmin(uid?: string): boolean {
   return false;
 }
 
+export function deleteAccount(uid: string): void {
+  const users = getUsers();
+  const filtered = users.filter(u => u.uid !== uid);
+  saveUsers(filtered);
+  // Supprimer toutes les donnees liees au compte
+  const playerId = users.find(u => u.uid === uid)?.playerId;
+  if (playerId) {
+    const pronos = JSON.parse(localStorage.getItem('pf_pronos') || '[]');
+    localStorage.setItem('pf_pronos', JSON.stringify(pronos.filter((p: any) => p.userId !== playerId)));
+    const favs = JSON.parse(localStorage.getItem('pf_favoris') || '[]');
+    localStorage.setItem('pf_favoris', JSON.stringify(favs.filter((f: any) => f.userId !== playerId)));
+  }
+  localStorage.removeItem('pf_session');
+  localStorage.removeItem('pf_settings');
+}
+
 export function banUser(targetUid: string): void {
   if (!isAdmin()) throw new Error('Permission refusee.');
   const users = getUsers();
