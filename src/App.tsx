@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { seedMatchesIfNeeded, refreshOdds } from './lib/seed';
+import { startMatchNotifications } from './lib/notifications';
+import ProfilPage from './pages/Profil';
+import ChampionPage from './pages/Champion';
 import { applyTheme, getSettings } from './lib/settings';
 import { startLiveScorePolling } from './lib/liveScores';
 import Navbar from './components/Navbar';
@@ -60,13 +63,14 @@ function AppRoutes() {
     seedMatchesIfNeeded();
     applyTheme(getSettings().theme);
     refreshOdds();
+    const stopNotifications = startMatchNotifications(getMatches);
+    return () => { stopPolling(); stopNotifications(); };
 
     const apiKey =
       process.env.REACT_APP_FOOTBALL_DATA_KEY ||
       localStorage.getItem('pf_football_api_key') ||
       'e17c642125d94af9bf0b31676463b862';
     const stopPolling = startLiveScorePolling(apiKey);
-    return stopPolling;
   }, []);
 
   if (!currentUser) {
@@ -89,6 +93,8 @@ function AppRoutes() {
           <Route path="/groupes" element={<PrivateRoute><Groupes /></PrivateRoute>} />
           <Route path="/favoris" element={<PrivateRoute><Favoris /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><ParametresPage /></PrivateRoute>} />
+          <Route path="/profil" element={<PrivateRoute><ProfilPage /></PrivateRoute>} />
+          <Route path="/champion" element={<PrivateRoute><ChampionPage /></PrivateRoute>} />
           <Route path="/test" element={<AdminRoute><TestPage /></AdminRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
