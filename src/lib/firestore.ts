@@ -116,6 +116,29 @@ export function recomputeAllPoints(): void {
   }
 }
 
+// ---- ADMIN PRONOS ----
+
+export function adminGetAllPronos(): Promise<Prono[]> {
+  return Promise.resolve(db.get<Prono>('pf_pronos'));
+}
+
+export async function adminUpdateProno(
+  pronoId: string,
+  homeScore: number,
+  awayScore: number
+): Promise<void> {
+  const all = db.get<Prono>('pf_pronos');
+  const prono = all.find(p => p.id === pronoId);
+  if (!prono) return;
+  // Update the prono scores
+  db.upsert('pf_pronos', { ...prono, homeScore, awayScore });
+  // Recalculate points for this match
+  const match = db.get<Match>('pf_matches').find(m => m.id === prono.matchId);
+  if (match && match.status === 'finished' && match.homeScore !== undefined && match.awayScore !== undefined) {
+    computePoints(match.id, match.homeScore, match.awayScore, match.odds);
+  }
+}
+
 // ---- GROUPS ----
 function encodeGroupCode(group: { id: string; name: string }): string {
   try {
