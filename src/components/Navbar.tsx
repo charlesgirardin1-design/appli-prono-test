@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical, Shield } from 'lucide-react';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical, Shield, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAdmin } from '../lib/auth';
 
@@ -20,9 +20,9 @@ export default function Navbar() {
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
     { to: '/profil', label: 'Profil', icon: User },
-  { to: '/champion', label: 'Champion', icon: Trophy },
-  { to: '/parametres', label: 'Paramètres', icon: Settings },
-    ];
+    { to: '/champion', label: 'Champion', icon: Trophy },
+    { to: '/parametres', label: 'Paramètres', icon: Settings },
+  ];
 
   if (adminUser) {
     links.push({ to: '/test', label: 'Test', icon: FlaskConical });
