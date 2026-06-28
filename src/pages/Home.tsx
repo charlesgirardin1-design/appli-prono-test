@@ -31,7 +31,16 @@ export default function Home() {
     };
   }, []);
 
-  const filtered = matches.filter(m => filter === 'all' || getEffectiveStatus(m) === filter);
+  const filtered = matches
+    .filter(m => filter === 'all' || getEffectiveStatus(m) === filter)
+    .sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      // Terminés : plus récent en premier
+      if (filter === 'finished') return db - da;
+      // À venir / live / tous : plus proche en premier
+      return da - db;
+    });
   const upcomingCount = matches.filter(m => getEffectiveStatus(m) === 'upcoming').length;
   const liveCount = matches.filter(m => getEffectiveStatus(m) === 'live').length;
   const pronosCount = pronos.filter(p =>
