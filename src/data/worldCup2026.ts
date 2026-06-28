@@ -17,22 +17,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Tchéquie' }, awayTeam: { name: 'Afrique du Sud' },
     date: '2026-06-18T16:00:00Z', competition: 'Groupe A', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 1,
     odds: { home: 2.30, draw: 3.20, away: 3.10 } },
 
   { homeTeam: { name: 'Mexique' }, awayTeam: { name: 'Corée du Sud' },
     date: '2026-06-19T03:00:00Z', competition: 'Groupe A', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 0,
     odds: { home: 1.90, draw: 3.40, away: 4.20 } },
 
   { homeTeam: { name: 'Tchéquie' }, awayTeam: { name: 'Mexique' },
     date: '2026-06-25T01:00:00Z', competition: 'Groupe A', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 3,
     odds: { home: 4.80, draw: 3.60, away: 1.75 } },
 
   { homeTeam: { name: 'Afrique du Sud' }, awayTeam: { name: 'Corée du Sud' },
     date: '2026-06-25T01:00:00Z', competition: 'Groupe A', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 0,
     odds: { home: 3.50, draw: 3.30, away: 2.10 } },
 
   // ══════════════════════════════════════════
@@ -50,22 +50,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Suisse' }, awayTeam: { name: 'Bosnie-Herzégovine' },
     date: '2026-06-18T19:00:00Z', competition: 'Groupe B', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 4, awayScore: 1,
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Canada' }, awayTeam: { name: 'Qatar' },
     date: '2026-06-18T22:00:00Z', competition: 'Groupe B', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 6, awayScore: 0,
     odds: { home: 1.50, draw: 4.20, away: 7.00 } },
 
   { homeTeam: { name: 'Suisse' }, awayTeam: { name: 'Canada' },
     date: '2026-06-24T19:00:00Z', competition: 'Groupe B', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 1,
     odds: { home: 2.10, draw: 3.30, away: 3.50 } },
 
   { homeTeam: { name: 'Bosnie-Herzégovine' }, awayTeam: { name: 'Qatar' },
     date: '2026-06-24T19:00:00Z', competition: 'Groupe B', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 3, awayScore: 1,
     odds: { home: 1.80, draw: 3.50, away: 4.80 } },
 
   // ══════════════════════════════════════════
@@ -83,22 +83,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Écosse' }, awayTeam: { name: 'Maroc' },
     date: '2026-06-19T22:00:00Z', competition: 'Groupe C', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 1,
     odds: { home: 2.80, draw: 3.20, away: 2.60 } },
 
   { homeTeam: { name: 'Brésil' }, awayTeam: { name: 'Haïti' },
     date: '2026-06-20T01:00:00Z', competition: 'Groupe C', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 3, awayScore: 0,
     odds: { home: 1.15, draw: 7.00, away: 18.00 } },
 
   { homeTeam: { name: 'Écosse' }, awayTeam: { name: 'Brésil' },
     date: '2026-06-24T22:00:00Z', competition: 'Groupe C', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 3,
     odds: { home: 5.50, draw: 4.00, away: 1.60 } },
 
   { homeTeam: { name: 'Maroc' }, awayTeam: { name: 'Haïti' },
     date: '2026-06-24T22:00:00Z', competition: 'Groupe C', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 4, awayScore: 2,
     odds: { home: 1.35, draw: 4.50, away: 9.00 } },
 
   // ══════════════════════════════════════════
@@ -116,22 +116,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'États-Unis' }, awayTeam: { name: 'Australie' },
     date: '2026-06-19T19:00:00Z', competition: 'Groupe D', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 0,
     odds: { home: 1.80, draw: 3.50, away: 4.50 } },
 
   { homeTeam: { name: 'Türkiye' }, awayTeam: { name: 'Paraguay' },
     date: '2026-06-20T04:00:00Z', competition: 'Groupe D', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 1,
     odds: { home: 1.90, draw: 3.40, away: 4.20 } },
 
   { homeTeam: { name: 'Türkiye' }, awayTeam: { name: 'États-Unis' },
     date: '2026-06-26T02:00:00Z', competition: 'Groupe D', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 3, awayScore: 2,
     odds: { home: 3.20, draw: 3.30, away: 2.30 } },
 
   { homeTeam: { name: 'Paraguay' }, awayTeam: { name: 'Australie' },
     date: '2026-06-26T02:00:00Z', competition: 'Groupe D', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 2.40, draw: 3.30, away: 3.00 } },
 
   // ══════════════════════════════════════════
@@ -149,22 +149,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Allemagne' }, awayTeam: { name: "Côte d'Ivoire" },
     date: '2026-06-20T20:00:00Z', competition: 'Groupe E', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 1,
     odds: { home: 1.40, draw: 4.50, away: 8.00 } },
 
   { homeTeam: { name: 'Équateur' }, awayTeam: { name: 'Curaçao' },
     date: '2026-06-21T00:00:00Z', competition: 'Groupe E', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Équateur' }, awayTeam: { name: 'Allemagne' },
     date: '2026-06-25T20:00:00Z', competition: 'Groupe E', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 1,
     odds: { home: 7.00, draw: 5.00, away: 1.40 } },
 
   { homeTeam: { name: 'Curaçao' }, awayTeam: { name: "Côte d'Ivoire" },
     date: '2026-06-25T20:00:00Z', competition: 'Groupe E', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 2,
     odds: { home: 5.50, draw: 4.20, away: 1.60 } },
 
   // ══════════════════════════════════════════
@@ -182,22 +182,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Pays-Bas' }, awayTeam: { name: 'Suède' },
     date: '2026-06-20T17:00:00Z', competition: 'Groupe F', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 5, awayScore: 1,
     odds: { home: 1.75, draw: 3.50, away: 4.80 } },
 
   { homeTeam: { name: 'Tunisie' }, awayTeam: { name: 'Japon' },
     date: '2026-06-21T02:00:00Z', competition: 'Groupe F', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 4,
     odds: { home: 3.20, draw: 3.20, away: 2.20 } },
 
   { homeTeam: { name: 'Japon' }, awayTeam: { name: 'Suède' },
     date: '2026-06-25T23:00:00Z', competition: 'Groupe F', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 1,
     odds: { home: 2.50, draw: 3.20, away: 2.90 } },
 
   { homeTeam: { name: 'Tunisie' }, awayTeam: { name: 'Pays-Bas' },
     date: '2026-06-25T23:00:00Z', competition: 'Groupe F', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 3,
     odds: { home: 6.50, draw: 4.50, away: 1.55 } },
 
   // ══════════════════════════════════════════
@@ -215,22 +215,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Belgique' }, awayTeam: { name: 'Iran' },
     date: '2026-06-21T19:00:00Z', competition: 'Groupe G', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 1.60, draw: 3.80, away: 6.00 } },
 
   { homeTeam: { name: 'Nouvelle-Zélande' }, awayTeam: { name: 'Égypte' },
     date: '2026-06-22T04:00:00Z', competition: 'Groupe G', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 3,
     odds: { home: 3.00, draw: 3.20, away: 2.40 } },
 
   { homeTeam: { name: 'Égypte' }, awayTeam: { name: 'Iran' },
     date: '2026-06-26T23:00:00Z', competition: 'Groupe G', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 1,
     odds: { home: 2.20, draw: 3.20, away: 3.30 } },
 
   { homeTeam: { name: 'Nouvelle-Zélande' }, awayTeam: { name: 'Belgique' },
     date: '2026-06-26T23:00:00Z', competition: 'Groupe G', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 5,
     odds: { home: 6.00, draw: 4.50, away: 1.55 } },
 
   // ══════════════════════════════════════════
@@ -248,22 +248,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Espagne' }, awayTeam: { name: 'Arabie Saoudite' },
     date: '2026-06-21T16:00:00Z', competition: 'Groupe H', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 4, awayScore: 0,
     odds: { home: 1.30, draw: 5.50, away: 10.00 } },
 
   { homeTeam: { name: 'Uruguay' }, awayTeam: { name: 'Cabo Verde' },
     date: '2026-06-21T22:00:00Z', competition: 'Groupe H', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 2,
     odds: { home: 1.55, draw: 4.00, away: 7.00 } },
 
   { homeTeam: { name: 'Uruguay' }, awayTeam: { name: 'Espagne' },
     date: '2026-06-27T00:00:00Z', competition: 'Groupe H', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 1,
     odds: { home: 3.80, draw: 3.40, away: 2.00 } },
 
   { homeTeam: { name: 'Cabo Verde' }, awayTeam: { name: 'Arabie Saoudite' },
     date: '2026-06-27T00:00:00Z', competition: 'Groupe H', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 3.20, draw: 3.30, away: 2.30 } },
 
   // ══════════════════════════════════════════
@@ -281,22 +281,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'France' }, awayTeam: { name: 'Irak' },
     date: '2026-06-22T21:00:00Z', competition: 'Groupe I', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 3, awayScore: 0,
     odds: { home: 1.20, draw: 7.00, away: 16.00 } },
 
   { homeTeam: { name: 'Norvège' }, awayTeam: { name: 'Sénégal' },
     date: '2026-06-23T00:00:00Z', competition: 'Groupe I', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 3, awayScore: 2,
     odds: { home: 1.90, draw: 3.40, away: 4.30 } },
 
   { homeTeam: { name: 'Norvège' }, awayTeam: { name: 'France' },
     date: '2026-06-26T19:00:00Z', competition: 'Groupe I', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 4,
     odds: { home: 3.20, draw: 3.30, away: 2.30 } },
 
   { homeTeam: { name: 'Sénégal' }, awayTeam: { name: 'Irak' },
     date: '2026-06-26T19:00:00Z', competition: 'Groupe I', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 5, awayScore: 0,
     odds: { home: 1.55, draw: 3.90, away: 6.50 } },
 
   // ══════════════════════════════════════════
@@ -314,22 +314,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Argentine' }, awayTeam: { name: 'Autriche' },
     date: '2026-06-22T17:00:00Z', competition: 'Groupe J', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 2, awayScore: 0,
     odds: { home: 1.55, draw: 4.00, away: 6.50 } },
 
   { homeTeam: { name: 'Jordanie' }, awayTeam: { name: 'Algérie' },
     date: '2026-06-23T03:00:00Z', competition: 'Groupe J', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 2,
     odds: { home: 2.50, draw: 3.20, away: 2.90 } },
 
   { homeTeam: { name: 'Algérie' }, awayTeam: { name: 'Autriche' },
     date: '2026-06-28T02:00:00Z', competition: 'Groupe J', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 3, awayScore: 3,
     odds: { home: 2.80, draw: 3.20, away: 2.60 } },
 
   { homeTeam: { name: 'Jordanie' }, awayTeam: { name: 'Argentine' },
     date: '2026-06-28T02:00:00Z', competition: 'Groupe J', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 1, awayScore: 3,
     odds: { home: 9.00, draw: 5.50, away: 1.35 } },
 
   // ══════════════════════════════════════════
@@ -347,22 +347,22 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Portugal' }, awayTeam: { name: 'Ouzbékistan' },
     date: '2026-06-23T17:00:00Z', competition: 'Groupe K', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 5, awayScore: 0,
     odds: { home: 1.25, draw: 6.00, away: 13.00 } },
 
   { homeTeam: { name: 'Colombie' }, awayTeam: { name: 'Congo DR' },
     date: '2026-06-24T02:00:00Z', competition: 'Groupe K', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 1, awayScore: 0,
     odds: { home: 1.70, draw: 3.60, away: 5.50 } },
 
   { homeTeam: { name: 'Colombie' }, awayTeam: { name: 'Portugal' },
     date: '2026-06-27T23:30:00Z', competition: 'Groupe K', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 3.00, draw: 3.30, away: 2.40 } },
 
   { homeTeam: { name: 'Congo DR' }, awayTeam: { name: 'Ouzbékistan' },
     date: '2026-06-27T23:30:00Z', competition: 'Groupe K', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 3, awayScore: 1,
     odds: { home: 1.80, draw: 3.50, away: 4.80 } },
 
   // ══════════════════════════════════════════
@@ -380,22 +380,105 @@ export const WORLD_CUP_2026_MATCHES: Omit<Match, 'id'>[] = [
 
   { homeTeam: { name: 'Angleterre' }, awayTeam: { name: 'Ghana' },
     date: '2026-06-23T20:00:00Z', competition: 'Groupe L', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 0,
     odds: { home: 1.50, draw: 4.20, away: 7.50 } },
 
   { homeTeam: { name: 'Panama' }, awayTeam: { name: 'Croatie' },
     date: '2026-06-23T23:00:00Z', competition: 'Groupe L', phase: 'Phase de groupes',
-    status: 'finished',
+    status: 'finished', homeScore: 0, awayScore: 1,
     odds: { home: 3.50, draw: 3.40, away: 2.10 } },
 
   { homeTeam: { name: 'Panama' }, awayTeam: { name: 'Angleterre' },
     date: '2026-06-27T21:00:00Z', competition: 'Groupe L', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 0, awayScore: 2,
     odds: { home: 10.00, draw: 6.00, away: 1.30 } },
 
   { homeTeam: { name: 'Croatie' }, awayTeam: { name: 'Ghana' },
     date: '2026-06-27T21:00:00Z', competition: 'Groupe L', phase: 'Phase de groupes',
-    status: 'upcoming',
+    status: 'finished', homeScore: 2, awayScore: 1,
     odds: { home: 2.20, draw: 3.20, away: 3.30 } },
+
+  // ══════════════════════════════════════════
+  // HUITIÈMES DE FINALE (Round of 32)
+  // ══════════════════════════════════════════
+  { homeTeam: { name: 'Afrique du Sud' }, awayTeam: { name: 'Canada' },
+    date: '2026-06-28T19:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 3.50, draw: 3.20, away: 2.10 } },
+
+  { homeTeam: { name: 'Brésil' }, awayTeam: { name: 'Japon' },
+    date: '2026-06-29T17:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.45, draw: 4.50, away: 7.50 } },
+
+  { homeTeam: { name: 'Allemagne' }, awayTeam: { name: 'Paraguay' },
+    date: '2026-06-29T20:30:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.35, draw: 5.00, away: 9.00 } },
+
+  { homeTeam: { name: 'Pays-Bas' }, awayTeam: { name: 'Maroc' },
+    date: '2026-06-30T01:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.60, draw: 3.80, away: 6.00 } },
+
+  { homeTeam: { name: "Côte d'Ivoire" }, awayTeam: { name: 'Norvège' },
+    date: '2026-06-30T17:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 2.50, draw: 3.30, away: 2.80 } },
+
+  { homeTeam: { name: 'France' }, awayTeam: { name: 'Suède' },
+    date: '2026-06-30T21:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.25, draw: 6.00, away: 12.00 } },
+
+  { homeTeam: { name: 'Mexique' }, awayTeam: { name: 'Équateur' },
+    date: '2026-07-01T01:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.70, draw: 3.60, away: 5.50 } },
+
+  { homeTeam: { name: 'Angleterre' }, awayTeam: { name: 'Congo DR' },
+    date: '2026-07-01T16:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.30, draw: 5.50, away: 10.00 } },
+
+  { homeTeam: { name: 'Belgique' }, awayTeam: { name: 'Sénégal' },
+    date: '2026-07-01T20:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.55, draw: 4.00, away: 6.50 } },
+
+  { homeTeam: { name: 'États-Unis' }, awayTeam: { name: 'Bosnie-Herzégovine' },
+    date: '2026-07-02T00:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.50, draw: 4.20, away: 7.00 } },
+
+  { homeTeam: { name: 'Espagne' }, awayTeam: { name: 'Autriche' },
+    date: '2026-07-02T19:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.55, draw: 3.90, away: 6.50 } },
+
+  { homeTeam: { name: 'Portugal' }, awayTeam: { name: 'Croatie' },
+    date: '2026-07-02T23:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.65, draw: 3.70, away: 5.50 } },
+
+  { homeTeam: { name: 'Suisse' }, awayTeam: { name: 'Algérie' },
+    date: '2026-07-03T03:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.70, draw: 3.60, away: 5.00 } },
+
+  { homeTeam: { name: 'Australie' }, awayTeam: { name: 'Égypte' },
+    date: '2026-07-03T18:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 2.10, draw: 3.30, away: 3.50 } },
+
+  { homeTeam: { name: 'Argentine' }, awayTeam: { name: 'Cabo Verde' },
+    date: '2026-07-03T22:00:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.10, draw: 9.00, away: 25.00 } },
+
+  { homeTeam: { name: 'Colombie' }, awayTeam: { name: 'Ghana' },
+    date: '2026-07-04T01:30:00Z', competition: 'Huitièmes de finale', phase: 'Huitièmes de finale',
+    status: 'upcoming',
+    odds: { home: 1.65, draw: 3.70, away: 5.50 } },
 
 ];
