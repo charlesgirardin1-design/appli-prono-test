@@ -96,13 +96,11 @@ async function fetchApiMatches(params: Record<string, string>): Promise<ApiMatch
   const url = '/api/scores' + '?' + qs;
   try {
     const resp = await fetch(url);
-    if (!resp.ok) { console.warn('[LiveScores] API HTTP', resp.status, qs); return []; }
+    if (!resp.ok) { console.warn('[LiveScores] HTTP', resp.status, qs); return []; }
     const data = await resp.json();
-    const matches: ApiMatch[] = data.matches || [];
-    console.log('[LiveScores]', qs, '→', matches.length, 'matchs');
-    return matches;
+    return data.matches || [];
   } catch (e) {
-    console.error('[LiveScores] Fetch error', qs, e);
+    console.error('[LiveScores] fetch error', e);
     return [];
   }
 }
@@ -153,9 +151,9 @@ export async function fetchAndUpdateScores(_apiKey?: string): Promise<void> {
     const found = apiMatchList.find(api => findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined);
     if (!found) return local;
     const newStatus = mapStatus(found.status);
-    const isActive = newStatus === 'live' || newStatus === 'finished';
-    const newHomeScore = found.score.fullTime.home !== null ? (found.score.fullTime.home ?? undefined) : (isActive ? 0 : undefined);
-    const newAwayScore = found.score.fullTime.away !== null ? (found.score.fullTime.away ?? undefined) : (isActive ? 0 : undefined);
+    // Garder le score existant si fullTime est null (match live sans score encore)
+    const newHomeScore = found.score.fullTime.home !== null ? found.score.fullTime.home : local.homeScore;
+    const newAwayScore = found.score.fullTime.away !== null ? found.score.fullTime.away : local.awayScore;
     if (local.status === newStatus && local.homeScore === newHomeScore && local.awayScore === newAwayScore) return local;
     updated = true;
     return { ...local, status: newStatus, homeScore: newHomeScore, awayScore: newAwayScore };
