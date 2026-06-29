@@ -3,7 +3,7 @@ import { Match } from '../types';
 import { WORLD_CUP_2026_MATCHES } from '../data/worldCup2026';
 import { recomputeAllPoints } from './firestore';
 
-const SEED_VERSION = 'v9'; // incrémenter pour forcer un re-seed
+const SEED_VERSION = 'v10'; // incrÃ©menter pour forcer un re-seed
 
 export function seedMatchesIfNeeded(): void {
   const seeded = localStorage.getItem('pf_seeded');
@@ -19,7 +19,7 @@ export function seedMatchesIfNeeded(): void {
   recomputeAllPoints();
 }
 
-// Met à jour les cotes des matchs depuis la source sans toucher aux scores/pronos
+// Met Ã  jour les cotes des matchs depuis la source sans toucher aux scores/pronos
 export function refreshOdds(): void {
   const matches = db.get<Match>('pf_matches');
   if (matches.length === 0) return;
