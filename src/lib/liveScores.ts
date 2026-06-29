@@ -1,7 +1,6 @@
 import { db } from './storage';
 import { Match } from '../types';
 
-// Mapping English API names → French names used in the app (must match seed data exactly)
 const TEAM_NAME_MAP: Record<string, string> = {
   'United States': 'États-Unis', 'USA': 'États-Unis',
   'Mexico': 'Mexique', 'Canada': 'Canada',
@@ -67,11 +66,7 @@ function toFrenchName(englishName: string): string {
 }
 
 function normalizeForComparison(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]/g, '');
+  return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
 function findMatchingLocalMatch(apiHome: string, apiAway: string, localMatches: Match[]): Match | undefined {
@@ -85,7 +80,6 @@ function findMatchingLocalMatch(apiHome: string, apiAway: string, localMatches: 
   );
 }
 
-// Scores du cron Vercel depuis Firestore (clés en anglais : "Brazil__Japan")
 async function fetchCronScores(): Promise<Record<string, { homeScore: number; awayScore: number; status: string }>> {
   try {
     const resp = await fetch('/api/match-scores');
@@ -97,11 +91,11 @@ async function fetchCronScores(): Promise<Record<string, { homeScore: number; aw
   }
 }
 
-// Appel direct football-data.org via proxy /api/scores
 async function fetchApiMatches(params: Record<string, string>): Promise<ApiMatch[]> {
   const qs = new URLSearchParams(params).toString();
+  const url = '/api/scores' + '?' + qs;
   try {
-    const resp = await fetch(`/api/scores?${qs}`);
+    const resp = await fetch(url);
     if (!resp.ok) { console.warn('[LiveScores] API HTTP', resp.status, qs); return []; }
     const data = await resp.json();
     const matches: ApiMatch[] = data.matches || [];
@@ -117,18 +111,16 @@ export async function fetchAndUpdateScores(_apiKey?: string): Promise<void> {
   const localMatches: Match[] = db.get<Match>('pf_matches');
   if (!localMatches.length) return;
 
-  // 1. Scores du cron Firestore (clés anglaises → convertir en français)
   const cronScores = await fetchCronScores();
   if (Object.keys(cronScores).length > 0) {
     const frenchKeyedScores: Record<string, typeof cronScores[string]> = {};
     for (const [key, score] of Object.entries(cronScores)) {
       const [home, away] = key.split('__');
-      const frKey = `${toFrenchName(home)}__${toFrenchName(away)}`;
-      frenchKeyedScores[frKey] = score;
+      frenchKeyedScores[toFrenchName(home) + '__' + toFrenchName(away)] = score;
     }
     let updated = false;
     const updatedMatches = localMatches.map(local => {
-      const key = `${local.homeTeam.name}__${local.awayTeam.name}`;
+      const key = local.homeTeam.name + '__' + local.awayTeam.name;
       const score = frenchKeyedScores[key];
       if (!score || score.homeScore == null) return local;
       const newStatus = score.status as Match['status'];
@@ -136,50 +128,40 @@ export async function fetchAndUpdateScores(_apiKey?: string): Promise<void> {
       updated = true;
       return { ...local, status: newStatus, homeScore: score.homeScore, awayScore: score.awayScore };
     });
-    if (updated) {
-      db.set('pf_matches', updatedMatches);
-      window.dispatchEvent(new Event('pf_matches_updated'));
-    }
+    if (updated) { db.set('pf_matches', updatedMatches); window.dispatchEvent(new Event('pf_matches_updated')); }
   }
 
-  // 2. Appel direct API football-data.org
   const today = new Date().toISOString().slice(0, 10);
+  const WC = 'WC';
+  const SEAS = '2026';
+  const ST_LIVE = 'IN_PLAY';
+  const ST_PAUSE = 'PAUSED';
+
   const [todayMatches, liveMatches, pausedMatches] = await Promise.all([
-    fetchApiMatches({ competition: 'WC', date: today, season: '2026' }),
-    fetchApiMatches({ competition: 'WC', status: 'IN_PLAY', season: '2026' }),
-    fetchApiMatches({ competition: 'WC', status: 'PAUSED', season: '2026' }),
+    fetchApiMatches({ competition: WC, date: today, season: SEAS }),
+    fetchApiMatches({ competition: WC, status: ST_LIVE, season: SEAS }),
+    fetchApiMatches({ competition: WC, status: ST_PAUSE, season: SEAS }),
   ]);
 
   const matchesById = new Map<number, ApiMatch>();
-  for (const m of [...todayMatches, ...liveMatches, ...pausedMatches]) {
-    matchesById.set(m.id, m);
-  }
+  for (const m of [...todayMatches, ...liveMatches, ...pausedMatches]) matchesById.set(m.id, m);
   const apiMatchList = Array.from(matchesById.values());
-
   if (apiMatchList.length === 0) return;
 
   let updated = false;
   const updatedMatches = localMatches.map(local => {
-    const found = apiMatchList.find(api =>
-      findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined
-    );
+    const found = apiMatchList.find(api => findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined);
     if (!found) return local;
-
     const newStatus = mapStatus(found.status);
     const isActive = newStatus === 'live' || newStatus === 'finished';
     const newHomeScore = found.score.fullTime.home !== null ? (found.score.fullTime.home ?? undefined) : (isActive ? 0 : undefined);
     const newAwayScore = found.score.fullTime.away !== null ? (found.score.fullTime.away ?? undefined) : (isActive ? 0 : undefined);
-
     if (local.status === newStatus && local.homeScore === newHomeScore && local.awayScore === newAwayScore) return local;
-
     updated = true;
     return { ...local, status: newStatus, homeScore: newHomeScore, awayScore: newAwayScore };
   });
 
-  if (updated) {
-    db.set('pf_matches', updatedMatches);
-    window.dispatchEvent(new Event('pf_matches_updated'));
-  }
+  if (updated) { db.set('pf_matches', updatedMatches); window.dispatchEvent(new Event('pf_matches_updated')); }
 }
 
 function hasLiveOrImminent(): boolean {
@@ -210,21 +192,22 @@ export function dailyRefresh(_apiKey?: string): void {
     }
     return m;
   });
-  if (changed) {
-    db.set('pf_matches', updated);
-    window.dispatchEvent(new Event('pf_matches_updated'));
-  }
+  if (changed) { db.set('pf_matches', updated); window.dispatchEvent(new Event('pf_matches_updated')); }
   fetchAndUpdateScores().catch(console.error);
 }
 
 export function startLiveScorePolling(_apiKey?: string): () => void {
-  const LIVE_INTERVAL = 10 * 60 * 1000;
+  let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function poll() {
-    if (hasLiveOrImminent()) fetchAndUpdateScores().catch(console.error);
+  function scheduleNext() {
+    const delay = hasLiveOrImminent() ? 60_000 : 10 * 60_000;
+    pollTimer = setTimeout(async () => {
+      await fetchAndUpdateScores().catch(console.error);
+      scheduleNext();
+    }, delay);
   }
 
-  const intervalId = setInterval(poll, LIVE_INTERVAL);
+  scheduleNext();
 
   let t1: ReturnType<typeof setTimeout>;
   let t2: ReturnType<typeof setTimeout>;
@@ -237,7 +220,7 @@ export function startLiveScorePolling(_apiKey?: string): () => void {
   scheduleMidnight(); scheduleNoon(); scheduleEvening();
 
   return () => {
-    clearInterval(intervalId);
+    if (pollTimer) clearTimeout(pollTimer);
     clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
   };
 }
