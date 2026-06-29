@@ -16,5 +16,24 @@ export function seedMatchesIfNeeded(): void {
 
   db.set('pf_matches', matches);
   localStorage.setItem('pf_seeded', SEED_VERSION);
-    recomputeAllPoints();
+  recomputeAllPoints();
+}
+
+// Met à jour les cotes des matchs depuis la source sans toucher aux scores/pronos
+export function refreshOdds(): void {
+  const matches = db.get<Match>('pf_matches');
+  if (matches.length === 0) return;
+
+  const source = WORLD_CUP_2026_MATCHES;
+  let changed = false;
+
+  const updated = matches.map((m, i) => {
+    const src = source[i];
+    if (!src || !src.odds) return m;
+    if (JSON.stringify(m.odds) === JSON.stringify(src.odds)) return m;
+    changed = true;
+    return { ...m, odds: src.odds };
+  });
+
+  if (changed) db.set('pf_matches', updated);
 }
