@@ -3,7 +3,7 @@
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/cron-scores", "schedule": "*/10 * * * *" },
+    { "path": "/api/cron-scores", "schedule": "0 12 * * *" },
     { "path": "/api/cron-scores", "schedule": "0 0 * * *" }
   ]
 }

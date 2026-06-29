@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical } from 'lucide-react';
+import { Trophy, Calendar, Users, BarChart3, Menu, X, Star, Settings, LogOut, FlaskConical, Shield, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { isAdmin } from '../lib/auth';
+
+type NavLink = { to: string; label: string; icon: React.ElementType };
 
 export default function Navbar() {
   const location = useLocation();
@@ -9,14 +12,22 @@ export default function Navbar() {
   const { currentUser, logout } = useAuth();
   const [open, setOpen] = React.useState(false);
 
-  const links = [
+  const adminUser = isAdmin(currentUser?.uid);
+
+  const links: NavLink[] = [
     { to: '/', label: 'Matchs', icon: Calendar },
     { to: '/favoris', label: 'Favoris', icon: Star },
     { to: '/classement', label: 'Classement', icon: BarChart3 },
     { to: '/groupes', label: 'Groupes', icon: Users },
+    { to: '/profil', label: 'Profil', icon: User },
+    { to: '/champion', label: 'Champion', icon: Trophy },
     { to: '/parametres', label: 'Paramètres', icon: Settings },
-    { to: '/test', label: 'Test', icon: FlaskConical },
   ];
+
+  if (adminUser) {
+    links.push({ to: '/test', label: 'Test', icon: FlaskConical });
+    links.push({ to: '/admin', label: 'Admin', icon: Shield });
+  }
 
   async function handleLogout() {
     await logout();

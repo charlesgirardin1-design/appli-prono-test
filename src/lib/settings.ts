@@ -1,6 +1,6 @@
 export interface AppSettings {
   pseudo: string;
-  playerId: string; // unique stable ID
+  playerId: string;
   theme: 'dark' | 'light';
 }
 
@@ -36,11 +36,30 @@ export function saveSettings(settings: Partial<AppSettings>): AppSettings {
   return next;
 }
 
+// Retourne le playerId du compte connecte (per-account), sinon fallback pf_settings
 export function getPlayerId(): string {
+  try {
+    const uid = localStorage.getItem('pf_session');
+    if (uid) {
+      const users: Array<{ uid: string; playerId?: string }> =
+        JSON.parse(localStorage.getItem('pf_users') || '[]');
+      const user = users.find(u => u.uid === uid);
+      if (user?.playerId) return user.playerId;
+    }
+  } catch {}
   return getSettings().playerId;
 }
 
 export function getPseudo(): string {
+  try {
+    const uid = localStorage.getItem('pf_session');
+    if (uid) {
+      const users: Array<{ uid: string; displayName?: string }> =
+        JSON.parse(localStorage.getItem('pf_users') || '[]');
+      const user = users.find(u => u.uid === uid);
+      if (user?.displayName) return user.displayName;
+    }
+  } catch {}
   return getSettings().pseudo;
 }
 
