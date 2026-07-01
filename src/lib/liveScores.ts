@@ -1,53 +1,113 @@
 import { db } from './storage';
 import { Match } from '../types';
 
+// Mapping English API names → French names used in the app (must match seed data exactly)
 const TEAM_NAME_MAP: Record<string, string> = {
-  'United States': 'États-Unis', 'USA': 'États-Unis',
-  'Mexico': 'Mexique', 'Canada': 'Canada',
-  'Argentina': 'Argentine', 'Australia': 'Australie',
-  'Brazil': 'Brésil', 'Colombia': 'Colombie',
-  'Uruguay': 'Uruguay', 'Paraguay': 'Paraguay',
-  'France': 'France', 'England': 'Angleterre',
-  'Germany': 'Allemagne', 'Portugal': 'Portugal',
-  'Spain': 'Espagne', 'Italy': 'Italie',
-  'Netherlands': 'Pays-Bas', 'Holland': 'Pays-Bas',
-  'Croatia': 'Croatie', 'Morocco': 'Maroc',
-  'Senegal': 'Sénégal', 'South Africa': 'Afrique du Sud',
-  'Japan': 'Japon', 'South Korea': 'Corée du Sud',
-  'Korea Republic': 'Corée du Sud', 'Saudi Arabia': 'Arabie Saoudite',
-  'Iran': 'Iran', 'Belgium': 'Belgique',
-  'Denmark': 'Danemark', 'Austria': 'Autriche',
-  'Switzerland': 'Suisse', 'Ecuador': 'Équateur',
-  'Egypt': 'Égypte', 'Nigeria': 'Nigéria',
-  'Algeria': 'Algérie', "Ivory Coast": "Côte d'Ivoire",
-  "Côte d'Ivoire": "Côte d'Ivoire", "Cote d'Ivoire": "Côte d'Ivoire",
-  'Poland': 'Pologne', 'Ukraine': 'Ukraine',
-  'Romania': 'Roumanie', 'Turkey': 'Türkiye', 'Türkiye': 'Türkiye',
-  'New Zealand': 'Nouvelle-Zélande', 'Qatar': 'Qatar', 'Panama': 'Panama',
-  'Czech Republic': 'Tchéquie', 'Czechia': 'Tchéquie',
+  // Group A
+  'United States': 'États-Unis',
+  'USA': 'États-Unis',
+  'Mexico': 'Mexique',
+  'Canada': 'Canada',
+  // Group B
+  'Argentina': 'Argentine',
+  'Chile': 'Chili',
+  'Peru': 'Pérou',
+  'Australia': 'Australie',
+  // Group C
+  'Brazil': 'Brésil',
+  'Colombia': 'Colombie',
+  'Uruguay': 'Uruguay',
+  'Paraguay': 'Paraguay',
+  // Group D
+  'France': 'France',
+  'England': 'Angleterre',
+  'Germany': 'Allemagne',
+  'Portugal': 'Portugal',
+  // Group E
+  'Spain': 'Espagne',
+  'Italy': 'Italie',
+  'Netherlands': 'Pays-Bas',
+  'Holland': 'Pays-Bas',
+  'Croatia': 'Croatie',
+  // Group F
+  'Morocco': 'Maroc',
+  'Senegal': 'Sénégal',
+  'South Africa': 'Afrique du Sud',
+  'Cameroon': 'Cameroun',
+  // Group G
+  'Japan': 'Japon',
+  'South Korea': 'Corée du Sud',
+  'Korea Republic': 'Corée du Sud',
+  'Saudi Arabia': 'Arabie Saoudite',
+  'Iran': 'Iran',
+  // Group H
+  'Belgium': 'Belgique',
+  'Denmark': 'Danemark',
+  'Austria': 'Autriche',
+  'Switzerland': 'Suisse',
+  // Group I
+  'Ecuador': 'Équateur',
+  'Venezuela': 'Venezuela',
+  'Bolivia': 'Bolivie',
+  'Costa Rica': 'Costa Rica',
+  // Group J
+  'Egypt': 'Égypte',
+  'Nigeria': 'Nigéria',
+  'Algeria': 'Algérie',
+  'Ivory Coast': "Côte d'Ivoire",
+  "Côte d'Ivoire": "Côte d'Ivoire",
+  // Group K
+  'Poland': 'Pologne',
+  'Ukraine': 'Ukraine',
+  'Romania': 'Roumanie',
+  'Turkey': 'Türkiye',
+  'Türkiye': 'Türkiye',
+  // Group L
+  'New Zealand': 'Nouvelle-Zélande',
+  'Indonesia': 'Indonésie',
+  'Qatar': 'Qatar',
+  'Panama': 'Panama',
+  // Additional
+  'Czech Republic': 'Tchéquie',
+  'Czechia': 'Tchéquie',
   'Bosnia and Herzegovina': 'Bosnie-Herzégovine',
   'Bosnia & Herzegovina': 'Bosnie-Herzégovine',
-  'Scotland': 'Écosse', 'Ghana': 'Ghana', 'Tunisia': 'Tunisie',
-  'Curaçao': 'Curaçao', 'Cape Verde': 'Cabo Verde', 'Cabo Verde': 'Cabo Verde',
-  'Iraq': 'Irak', 'Uzbekistan': 'Ouzbékistan', 'Jordan': 'Jordanie',
-  'Congo DR': 'Congo DR', 'DR Congo': 'Congo DR',
+  'Scotland': 'Écosse',
+  'Ghana': 'Ghana',
+  'Tunisia': 'Tunisie',
+  'Curaçao': 'Curaçao',
+  'Cabo Verde': 'Cabo Verde',
+  'Cape Verde': 'Cabo Verde',
+  'Iraq': 'Irak',
+  'Uzbekistan': 'Ouzbékistan',
+  'Jordan': 'Jordanie',
+  'Congo DR': 'Congo DR',
+  'DR Congo': 'Congo DR',
   'Democratic Republic of Congo': 'Congo DR',
-  'Norway': 'Norvège', 'Sweden': 'Suède', 'Haiti': 'Haïti',
-  'Indonesia': 'Indonésie',
+  'Norway': 'Norvège',
+  'Sweden': 'Suède',
+  'Haiti': 'Haïti',
 };
 
 type ApiStatus = 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'TIMED' | 'SCHEDULED' | string;
+
+interface ApiTeam {
+  name: string;
+  shortName: string;
+}
+
+interface ApiScore {
+  fullTime: { home: number | null; away: number | null };
+  halfTime: { home: number | null; away: number | null };
+}
 
 interface ApiMatch {
   id: number;
   utcDate: string;
   status: ApiStatus;
-  homeTeam: { name: string; shortName?: string };
-  awayTeam: { name: string; shortName?: string };
-  score: {
-    fullTime: { home: number | null; away: number | null };
-    halfTime?: { home: number | null; away: number | null };
-  };
+  homeTeam: ApiTeam;
+  awayTeam: ApiTeam;
+  score: ApiScore;
 }
 
 function mapStatus(apiStatus: ApiStatus): Match['status'] {
@@ -66,18 +126,45 @@ function toFrenchName(englishName: string): string {
 }
 
 function normalizeForComparison(name: string): string {
-  return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
 }
 
-function findMatchingLocalMatch(apiHome: string, apiAway: string, localMatches: Match[]): Match | undefined {
+function findMatchingLocalMatch(
+  apiHome: string,
+  apiAway: string,
+  localMatches: Match[]
+): Match | undefined {
   const frHome = toFrenchName(apiHome);
   const frAway = toFrenchName(apiAway);
   const normHome = normalizeForComparison(frHome);
   const normAway = normalizeForComparison(frAway);
-  return localMatches.find(m =>
-    normalizeForComparison(m.homeTeam.name) === normHome &&
-    normalizeForComparison(m.awayTeam.name) === normAway
-  );
+  return localMatches.find(m => {
+    const mHome = normalizeForComparison(m.homeTeam.name);
+    const mAway = normalizeForComparison(m.awayTeam.name);
+    return mHome === normHome && mAway === normAway;
+  });
+}
+
+async function fetchEndpoint(endpoint: string): Promise<ApiMatch[]> {
+  const url = '/api/scores?endpoint=' + endpoint;
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      console.warn('[LiveScores] Proxy HTTP', resp.status, endpoint);
+      return [];
+    }
+    const data = await resp.json();
+    const matches: any[] = data.matches || data.events || data.data || [];
+    console.log('[LiveScores]', endpoint, '→', matches.length, 'matchs');
+    return matches;
+  } catch (e) {
+    console.error('[LiveScores] Fetch error', endpoint, e);
+    return [];
+  }
 }
 
 async function fetchCronScores(): Promise<Record<string, { homeScore: number; awayScore: number; status: string }>> {
@@ -91,75 +178,77 @@ async function fetchCronScores(): Promise<Record<string, { homeScore: number; aw
   }
 }
 
-async function fetchApiMatches(params: Record<string, string>): Promise<ApiMatch[]> {
-  const qs = new URLSearchParams(params).toString();
-  const url = '/api/scores' + '?' + qs;
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) { console.warn('[LiveScores] HTTP', resp.status, qs); return []; }
-    const data = await resp.json();
-    return data.matches || [];
-  } catch (e) {
-    console.error('[LiveScores] fetch error', e);
-    return [];
-  }
-}
+export async function fetchAndUpdateScores(apiKey: string): Promise<void> {
+  if (!apiKey) return;
 
-export async function fetchAndUpdateScores(_apiKey?: string): Promise<void> {
   const localMatches: Match[] = db.get<Match>('pf_matches');
   if (!localMatches.length) return;
 
+  // 1. Try Firestore cron scores first
   const cronScores = await fetchCronScores();
   if (Object.keys(cronScores).length > 0) {
-    const frenchKeyedScores: Record<string, typeof cronScores[string]> = {};
-    for (const [key, score] of Object.entries(cronScores)) {
-      const [home, away] = key.split('__');
-      frenchKeyedScores[toFrenchName(home) + '__' + toFrenchName(away)] = score;
-    }
+    console.log('[LiveScores] Scores cron Firestore:', Object.keys(cronScores).length, 'matchs');
     let updated = false;
     const updatedMatches = localMatches.map(local => {
-      const key = local.homeTeam.name + '__' + local.awayTeam.name;
-      const score = frenchKeyedScores[key];
-      if (!score || score.homeScore == null) return local;
+      const key = `${local.homeTeam.name}__${local.awayTeam.name}`;
+      const score = cronScores[key];
+      if (!score || score.homeScore < 0) return local;
       const newStatus = score.status as Match['status'];
       if (local.status === newStatus && local.homeScore === score.homeScore && local.awayScore === score.awayScore) return local;
       updated = true;
       return { ...local, status: newStatus, homeScore: score.homeScore, awayScore: score.awayScore };
     });
-    if (updated) { db.set('pf_matches', updatedMatches); window.dispatchEvent(new Event('pf_matches_updated')); }
+    if (updated) {
+      db.set('pf_matches', updatedMatches);
+      window.dispatchEvent(new Event('pf_matches_updated'));
+    }
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const WC = 'WC';
-  const SEAS = '2026';
-  const ST_LIVE = 'IN_PLAY';
-  const ST_PAUSE = 'PAUSED';
-
-  const [todayMatches, liveMatches, pausedMatches] = await Promise.all([
-    fetchApiMatches({ competition: WC, date: today, season: SEAS }),
-    fetchApiMatches({ competition: WC, status: ST_LIVE, season: SEAS }),
-    fetchApiMatches({ competition: WC, status: ST_PAUSE, season: SEAS }),
-  ]);
+  // 2. Direct API fallback — changed: worldcup → paused to fetch PAUSED matches
+  const todayMatches = await fetchEndpoint('today');
+  const pausedMatches = await fetchEndpoint('paused');
+  const liveMatches = await fetchEndpoint('live');
 
   const matchesById = new Map<number, ApiMatch>();
-  for (const m of [...todayMatches, ...liveMatches, ...pausedMatches]) matchesById.set(m.id, m);
+  for (const m of pausedMatches) matchesById.set(m.id, m);
+  for (const m of todayMatches) matchesById.set(m.id, m);
+  for (const m of liveMatches) matchesById.set(m.id, m);
+
   const apiMatchList = Array.from(matchesById.values());
-  if (apiMatchList.length === 0) return;
+  const liveFromApi = apiMatchList.filter(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
+  console.log('[LiveScores] API returned', apiMatchList.length, 'matches,', liveFromApi.length, 'live');
 
   let updated = false;
   const updatedMatches = localMatches.map(local => {
-    const found = apiMatchList.find(api => findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined);
+    const found = apiMatchList.find(api =>
+      findMatchingLocalMatch(api.homeTeam.name, api.awayTeam.name, [local]) !== undefined
+    );
+
     if (!found) return local;
+
     const newStatus = mapStatus(found.status);
-    // Garder le score existant si fullTime est null (match live sans score encore)
-    const newHomeScore = found.score.fullTime.home !== null ? found.score.fullTime.home : local.homeScore;
-    const newAwayScore = found.score.fullTime.away !== null ? found.score.fullTime.away : local.awayScore;
-    if (local.status === newStatus && local.homeScore === newHomeScore && local.awayScore === newAwayScore) return local;
+    const isLiveOrFinished = newStatus === 'live' || newStatus === 'finished';
+    const newHomeScore = found.score.fullTime.home !== null
+      ? (found.score.fullTime.home ?? undefined)
+      : (isLiveOrFinished ? 0 : undefined);
+    const newAwayScore = found.score.fullTime.away !== null
+      ? (found.score.fullTime.away ?? undefined)
+      : (isLiveOrFinished ? 0 : undefined);
+
+    if (
+      local.status === newStatus &&
+      local.homeScore === newHomeScore &&
+      local.awayScore === newAwayScore
+    ) return local;
+
     updated = true;
     return { ...local, status: newStatus, homeScore: newHomeScore, awayScore: newAwayScore };
   });
 
-  if (updated) { db.set('pf_matches', updatedMatches); window.dispatchEvent(new Event('pf_matches_updated')); }
+  if (updated) {
+    db.set('pf_matches', updatedMatches);
+    window.dispatchEvent(new Event('pf_matches_updated'));
+  }
 }
 
 function hasLiveOrImminent(): boolean {
@@ -171,7 +260,7 @@ function hasLiveOrImminent(): boolean {
   });
 }
 
-function msUntilNext(hour: number, minute = 0): number {
+function msUntilNext(hour: number, minute: number = 0): number {
   const now = new Date();
   const next = new Date(now);
   next.setHours(hour, minute, 0, 0);
@@ -179,46 +268,84 @@ function msUntilNext(hour: number, minute = 0): number {
   return next.getTime() - now.getTime();
 }
 
-export function dailyRefresh(_apiKey?: string): void {
+export function dailyRefresh(apiKey: string): void {
+  // Mark past matches as finished (both 'upcoming' AND 'live' that have timed out)
   const matches: Match[] = db.get<Match>('pf_matches');
   const now = Date.now();
   let changed = false;
   const updated = matches.map(m => {
-    if (m.status === 'upcoming') {
+    if (m.status === 'upcoming' || m.status === 'live') {
       const end = new Date(m.date).getTime() + 3 * 60 * 60 * 1000;
-      if (now > end) { changed = true; return { ...m, status: 'finished' as const }; }
+      if (now > end) {
+        changed = true;
+        return { ...m, status: 'finished' as const };
+      }
     }
     return m;
   });
-  if (changed) { db.set('pf_matches', updated); window.dispatchEvent(new Event('pf_matches_updated')); }
-  fetchAndUpdateScores().catch(console.error);
+  if (changed) {
+    db.set('pf_matches', updated);
+    window.dispatchEvent(new Event('pf_matches_updated'));
+    console.log('[LiveScores] Refresh — matchs passés marqués terminés');
+  }
+  fetchAndUpdateScores(apiKey).catch(console.error);
 }
 
-export function startLiveScorePolling(_apiKey?: string): () => void {
+export function startLiveScorePolling(apiKey: string): () => void {
+  // Adaptive polling: 60s during live matches, 10min when idle
   let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
   function scheduleNext() {
     const delay = hasLiveOrImminent() ? 60_000 : 10 * 60_000;
     pollTimer = setTimeout(async () => {
-      await fetchAndUpdateScores().catch(console.error);
+      await fetchAndUpdateScores(apiKey).catch(console.error);
       scheduleNext();
     }, delay);
   }
 
+  // Fetch immediately if there's a live/imminent match
+  if (hasLiveOrImminent()) {
+    fetchAndUpdateScores(apiKey).catch(console.error);
+  }
   scheduleNext();
 
-  let t1: ReturnType<typeof setTimeout>;
-  let t2: ReturnType<typeof setTimeout>;
-  let t3: ReturnType<typeof setTimeout>;
+  // Daily refreshes at midnight, noon, 23h05
+  let midnightTimeout: ReturnType<typeof setTimeout>;
+  let noonTimeout: ReturnType<typeof setTimeout>;
+  let eveningTimeout: ReturnType<typeof setTimeout>;
 
-  function scheduleMidnight() { t1 = setTimeout(() => { dailyRefresh(); scheduleMidnight(); }, msUntilNext(0)); }
-  function scheduleNoon()     { t2 = setTimeout(() => { dailyRefresh(); scheduleNoon(); }, msUntilNext(12)); }
-  function scheduleEvening()  { t3 = setTimeout(() => { dailyRefresh(); scheduleEvening(); }, msUntilNext(23, 5)); }
+  function scheduleMidnight() {
+    midnightTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh minuit');
+      dailyRefresh(apiKey);
+      scheduleMidnight();
+    }, msUntilNext(0));
+  }
 
-  scheduleMidnight(); scheduleNoon(); scheduleEvening();
+  function scheduleNoon() {
+    noonTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh midi');
+      dailyRefresh(apiKey);
+      scheduleNoon();
+    }, msUntilNext(12));
+  }
+
+  function scheduleEvening() {
+    eveningTimeout = setTimeout(() => {
+      console.log('[LiveScores] Refresh 23h05');
+      dailyRefresh(apiKey);
+      scheduleEvening();
+    }, msUntilNext(23, 5));
+  }
+
+  scheduleMidnight();
+  scheduleNoon();
+  scheduleEvening();
 
   return () => {
     if (pollTimer) clearTimeout(pollTimer);
-    clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+    clearTimeout(midnightTimeout);
+    clearTimeout(noonTimeout);
+    clearTimeout(eveningTimeout);
   };
 }
